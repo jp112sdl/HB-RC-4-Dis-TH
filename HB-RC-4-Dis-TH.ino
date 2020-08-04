@@ -38,12 +38,12 @@
 
 Adafruit_SharpMem display(&SPI, SHARP_SS, 128, 128);
 U8G2_FONTS_GFX u8g2Fonts(display);
-typedef enum screens { SCREEN_KEYS, SCREEN_TEMPERATURE } Screen;
+typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE } Screen;
 
 #define BLACK       0
 #define WHITE       1
 #define TEXT_FONT   u8g2_font_helvR14_tf
-#define HEADER_FONT u8g2_font_finderskeepers_tr
+#define HEADER_FONT u8g2_font_helvR08_tf
 
 #define CHANNEL_COUNT       4
 #define TEXT_LENGTH        10
@@ -79,15 +79,17 @@ Hal hal;
 class DisplayType : public Alarm {
 private:
   uint8_t screen;
+  uint8_t current_screen;
   uint8_t timeout;
   int16_t temperature;
   uint8_t humidity;
   uint16_t battery;
   uint16_t battery_low;
 private:
-  uint16_t centerPosition(const char * text) { return (display.width() / 2) - (u8g2Fonts.getUTF8Width(text) / 2); }
+  uint16_t centerPosition(const char * text) { return centerPosition(display.width(), text); }
+  uint16_t centerPosition(uint8_t width, const char * text) { return (width / 2) - (u8g2Fonts.getUTF8Width(text) / 2); }
 public:
-  DisplayType () :  Alarm(seconds2ticks(1)), screen(0), timeout(10), temperature(0), humidity(0), battery(0), battery_low(0) {}
+  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), battery(0), battery_low(0) {}
   virtual ~DisplayType () {}
   void cancel (AlarmClock& clock) {
     clock.cancel(*this);
@@ -99,9 +101,8 @@ public:
   }
   virtual void trigger (__attribute__((unused)) AlarmClock& clock) {
     switch (screen) {
-    case SCREEN_KEYS:
+    case SCREEN_KEYLABELS:
       showKeyLabels();
-      screen = Screen::SCREEN_TEMPERATURE;
       set(seconds2ticks(timeout),sysclock);
       break;
     case Screen::SCREEN_TEMPERATURE:
@@ -127,74 +128,84 @@ public:
     battery_low = bl;
   }
 
+  uint8_t currentScreen() {
+    return current_screen;
+  }
+
   void showTemp() {
-    if (screen == Screen::SCREEN_TEMPERATURE) {
-      display.clearDisplay();
-
-      float temp_float = this->temperature / 10.0F;
-      char t[4];
-      dtostrf(temp_float, 2, 1, t);
-
-      const char * h_unit = "%rH";
-      const char * t_unit = "°C";
-
       display.setRotation(3);
-      u8g2Fonts.setFont(u8g2_font_logisoso20_tr);
-      uint8_t h_unit_width = u8g2Fonts.getUTF8Width(h_unit);
-      u8g2Fonts.setFont(u8g2_font_logisoso34_tn);
 
-      char hum[4];
-      itoa(this->humidity, hum, 10);
-      uint8_t h_width = u8g2Fonts.getUTF8Width(hum);
+      const char * t_unit = "°C";
+      const char * h_unit = "%rH";
 
-      u8g2Fonts.setFont(u8g2_font_logisoso42_tn);
-      u8g2Fonts.drawStr(3, display.height() - 78, t);
-      u8g2Fonts.setCursor(u8g2Fonts.getUTF8Width(t) + 6, display.height() - 94);
-      u8g2Fonts.setFont(u8g2_font_logisoso22_tf);
-      u8g2Fonts.print(t_unit);
+      static int16_t last_temperature = 0;
+      static uint8_t last_humidity = 0;
+      static uint8_t last_battpct = 0;
 
-      u8g2Fonts.setFont(u8g2_font_logisoso34_tn);
-      u8g2Fonts.setCursor((display.width() / 2) - ((h_unit_width + h_width) / 2), display.height() - 26);
-      u8g2Fonts.print(hum);
-      u8g2Fonts.setCursor((display.width() / 2) + ((h_width / 2) / 2), display.height() - 26);
-      u8g2Fonts.setFont(u8g2_font_logisoso20_tr);
-      u8g2Fonts.print(h_unit);
-      display.refresh();
+      //draw main frame on first call
+      if (current_screen != Screen::SCREEN_TEMPERATURE) {
+        display.fillRect(0, 0, display.width(), display.height(), WHITE);
+        for (uint8_t i = 0; i < 3; i ++)
+          display.drawLine(0, (display.height() / 2) - 8 + i, display.width(), (display.height() / 2) - 8 + i, BLACK);
 
-      for (uint8_t i = 0; i < 3; i ++)
-        display.drawLine(0, (display.height() / 2) - 8 + i, display.width(), (display.height() / 2) - 8 + i, BLACK);
+        display.drawLine(0, display.height() -17, display.width(), display.height() -17, BLACK);
+        display.drawLine(0, display.height() -18, display.width(), display.height() -18, BLACK);
 
-      display.drawLine(0, display.height() -17, display.width(), display.height() -17, BLACK);
-      display.drawLine(0, display.height() -18, display.width(), display.height() -18, BLACK);
+        display.drawRect(display.width()/2-14, display.height()-14, 20, 12, BLACK);
+        display.fillRect(display.width()/2-14+20, display.height()-12, 4, 8, BLACK);
+     }
 
-      display.drawRect(display.width()/2-14, display.height()-14, 20, 12, BLACK);
-      display.fillRect(display.width()/2-14+20, display.height()-12, 4, 8, BLACK);
 
+      if (temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE) {
+        display.fillRect(0,0,display.width(),(display.height() / 2) - 8, WHITE);
+        float temp_float = this->temperature / 10.0F;
+        char t[4];
+        dtostrf(temp_float, 2, 1, t);
+
+        u8g2Fonts.setFont(u8g2_font_logisoso42_tn);
+        u8g2Fonts.drawStr(3, display.height() - 78, t);
+        u8g2Fonts.setCursor(u8g2Fonts.getUTF8Width(t) + 6, display.height() - 94);
+        u8g2Fonts.setFont(u8g2_font_logisoso22_tf);
+        u8g2Fonts.print(t_unit);
+      }
+
+      if (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE) {
+        display.fillRect(0,(display.height() / 2) - 5 ,display.width(),(display.height() -17) - (display.height() / 2 ) , WHITE);
+        char hum[4];
+        itoa(this->humidity, hum, 10);
+        u8g2Fonts.setFont(u8g2_font_logisoso34_tn);
+        uint8_t h_width = u8g2Fonts.getUTF8Width(hum);
+        u8g2Fonts.setFont(u8g2_font_logisoso20_tr);
+        uint8_t h_unit_width = u8g2Fonts.getUTF8Width(h_unit);
+        u8g2Fonts.setFont(u8g2_font_logisoso34_tn);
+        u8g2Fonts.setCursor((display.width() / 2) - ((h_unit_width + h_width) / 2), display.height() - 26);
+        u8g2Fonts.print(hum);
+        u8g2Fonts.setCursor((display.width() / 2) + ((h_width / 2) / 2), display.height() - 26);
+        u8g2Fonts.setFont(u8g2_font_logisoso20_tr);
+        u8g2Fonts.print(h_unit);
+      }
 
       uint8_t max = 30 - battery_low;
       uint8_t diff = battery - battery_low;
-      uint8_t pct = (100 * diff) / max;
+      uint8_t battpct = (100 * diff) / max;
 
-      DPRINT("b   :");DDECLN(battery);
-
-      DPRINT("low :");DDECLN(battery_low);
-
-      DPRINT("max :");DDECLN(max);
-      DPRINT("diff:");DDECLN(diff);
-      DPRINT("pct :");DDECLN(pct);
-
-      if (pct > 40)
-      display.fillRect(display.width()/2-14 + 3 , display.height()-12, 4, 8, BLACK);
-      if (pct > 60)
-      display.fillRect(display.width()/2-14 + 3 + 4 + 1 , display.height()-12, 4, 8, BLACK);
-      if (pct > 80)
-      display.fillRect(display.width()/2-14 + 3 + 4 + 1 + 4 + 1 , display.height()-12, 4, 8, BLACK);
+      if (battpct != last_battpct || current_screen != Screen::SCREEN_TEMPERATURE) {
+        display.fillRect(display.width()/2-14 + 3 , display.height()-12, 4, 8, battpct > 40 ? BLACK: WHITE);
+        display.fillRect(display.width()/2-14 + 3 + 4 + 1 , display.height()-12, 4, 8, battpct > 60 ? BLACK : WHITE);
+        display.fillRect(display.width()/2-14 + 3 + 4 + 1 + 4 + 1 , display.height()-12, 4, 8, battpct > 80 ? BLACK : WHITE);
+      }
 
       display.refresh();
-    }
+
+      current_screen = Screen::SCREEN_TEMPERATURE;
+      last_temperature = temperature;
+      last_humidity = humidity;
+      last_battpct = battpct;
   }
 
   void showKeyLabels() {
+    current_screen = Screen::SCREEN_KEYLABELS;
+    //display.fillRect(0, 0, display.width(), display.height(), WHITE);
     display.clearDisplay();
     for (uint8_t i = 0; i < display.height() / 4; i++)
       display.fillCircle(display.width()/2 -1 , i * 4, 1, BLACK);
@@ -203,10 +214,84 @@ public:
       display.fillCircle(i * 4, display.height()/2, 1, BLACK);
 
     display.refresh();
+
+    u8g2Fonts.setFont(HEADER_FONT);
+    for (uint8_t i = 0; i< CHANNEL_COUNT;i++) {
+      if (DisplayFields[i].showHeader) {
+        const char * ht = DisplayFields[i].HeaderText.c_str();
+        if (i == 0) {
+          display.drawRoundRect(0, 1, display.width() / 2 - 2, 14, 2, BLACK);
+          u8g2Fonts.setCursor(centerPosition((display.width() / 2), ht),12);
+        }
+        if (i == 1) {
+          display.drawRoundRect(display.width() / 2 + 1, 1, display.width() / 2-2, 14, 2, BLACK);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition((display.width() / 2), ht),12);
+        }
+
+        if (i == 2) {
+          display.drawRoundRect(0, display.height()-15, display.width() / 2 - 2, 14, 2, BLACK);
+          u8g2Fonts.setCursor(centerPosition((display.width() / 2), ht),display.height()-4);
+        }
+        if (i == 3) {
+          display.drawRoundRect(display.width() / 2 + 1, display.height()-15, display.width() / 2-2, 14, 2, BLACK);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition((display.width() / 2), ht),display.height()-4);
+        }
+
+        u8g2Fonts.print(ht);
+
+      }
+    }
+    display.refresh();
+
+
+    u8g2Fonts.setFont(TEXT_FONT);
+    const uint8_t w = (display.width() / 2) - 2;
+
+    for (uint8_t i = 0; i< CHANNEL_COUNT;i++) {
+      if (DisplayFields[i].MainText2 == "") {
+        const char * mt1 = DisplayFields[i].MainText1.c_str();
+        if (i == 0)
+          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 2) + 14);
+        if (i == 1)
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 2) + 14);
+        if (i == 2)
+          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 5) + 14);
+        if (i == 3)
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 5) + 14);
+        u8g2Fonts.print(mt1);
+      } else {
+        const char * mt1 = DisplayFields[i].MainText1.c_str();
+        if (i == 0)
+          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 3) - 10);
+        if (i == 1)
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 3) - 10);
+        if (i == 2)
+          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 6) - 10);
+        if (i == 3)
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 6) - 10);
+        u8g2Fonts.print(mt1);
+
+        const char * mt2 = DisplayFields[i].MainText2.c_str();
+        if (i == 0)
+          u8g2Fonts.setCursor(centerPosition(w, mt2), ((display.height() / 8) * 3) + 8);
+        if (i == 1)
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt2), ((display.height() / 8) * 3) + 8);
+        if (i == 2)
+          u8g2Fonts.setCursor(centerPosition(w, mt2), ((display.height() / 8) * 6) + 8);
+        if (i == 3)
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt2), ((display.height() / 8) * 6) + 8);
+        u8g2Fonts.print(mt2);
+      }
+    }
+
+
+    display.refresh();
+    screen = Screen::SCREEN_TEMPERATURE;
   }
 
   void showInitScreen(char*serial) {
-    screen = SCREEN_KEYS;
+    screen = SCREEN_KEYLABELS;
+
     const char * asksinpp     PROGMEM = "AskSin++";
     const char * version      PROGMEM = "V " ASKSIN_PLUS_PLUS_VERSION;
     const char * compiledDate PROGMEM = __DATE__ ;
@@ -231,6 +316,7 @@ public:
     u8g2Fonts.print(ser);
 
     display.refresh();
+
     set(seconds2ticks(2), sysclock);
   }
 
@@ -283,7 +369,7 @@ class RCEPList1 : public RegList1<RCEPReg1> {
       clear();
       //aesActive(false);
       uint8_t initValues[TEXT_LENGTH];
-      memset(initValues, 0x20, TEXT_LENGTH);
+      memset(initValues, 0x00, TEXT_LENGTH);
       headerText(initValues);
       mainText1(initValues);
       mainText2(initValues);
@@ -325,8 +411,20 @@ public:
       DisplayFields[number() -1].MainText1 = this->getList1().mainText1();
       DisplayFields[number() -1].MainText2 = this->getList1().mainText2();
 
+      DisplayFields[number() -1].HeaderText.trim();
+      DisplayFields[number() -1].MainText1.trim();
+      DisplayFields[number() -1].MainText2.trim();
+
+      typedef struct rmap { char in; String out; } rmap_t;
+      const rmap_t rplmap[8] = { { '{', "ä" }, { '|', "ö" }, { '}', "ü" }, { '[', "Ä" }, { '#', "Ö" }, { '$', "Ü" }, { '~', "ß" }, { '\'', "=" } };
+      for (uint8_t i = 0; i < 8; i++) {
+        DisplayFields[number() -1].HeaderText.replace(String(rplmap[i].in), rplmap[i].out);
+         DisplayFields[number() -1].MainText1.replace(String(rplmap[i].in), rplmap[i].out);
+         DisplayFields[number() -1].MainText2.replace(String(rplmap[i].in), rplmap[i].out);
+      }
+
       //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") showHeader : "));DDECLN(this->getList1().showHeader());
-      //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") HeaderText : "));DPRINTLN(this->getList1().headerText());
+      //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") HeaderText : "));DPRINTLN(DisplayFields[number() -1].HeaderText);
       //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") MainText1  : "));DPRINTLN(this->getList1().mainText1());
       //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") MainText2  : "));DPRINTLN(this->getList1().mainText2());
     }
@@ -334,14 +432,15 @@ public:
 
 class WeatherEventMsg : public Message {
   public:
-    void init(uint8_t msgcnt, int16_t temp, uint8_t humidity, bool batlow) {
+    void init(uint8_t msgcnt, int16_t temp, uint8_t humidity, bool batlow, uint8_t bvolt) {
       uint8_t t1 = (temp >> 8) & 0x7f;
       uint8_t t2 = temp & 0xff;
       if ( batlow == true ) {
         t1 |= 0x80; // set bat low bit
       }
-      Message::init(0xc, msgcnt, 0x70, BIDI | WKMEUP, t1, t2);
-      pload[0] = humidity;
+      Message::init(0xd, msgcnt, 0x70, BIDI | WKMEUP, t1, t2);
+      pload[0] = humidity & 0xff;
+      pload[1] = bvolt & 0xff;
     }
 };
 
@@ -378,8 +477,8 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
       clock.add(*this);
       measure();
       Display.setWeatherValues(temp, humidity, device().battery().current(), device().getList0().lowBatLimit());
-      Display.showTemp();
-      msg.init(msgcnt, temp, humidity, device().battery().low());
+      if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp();
+      msg.init(msgcnt, temp, humidity, device().battery().low(), device().battery().current());
       device().getList0().ledMode(false);
       device().broadcastEvent(msg);
       device().getList0().ledMode(true);
@@ -396,9 +495,9 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
     uint8_t flags () const { return 0; }
 
     virtual void configChanged () {
-      DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") TEMP OFFSET : "));DDECLN(this->getList1().TemperatureOffset());
-      DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") HUMI OFFSET : "));DDECLN(this->getList1().HumidityOffset());
-      DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") SEND INTERV : "));DDECLN(this->getList1().sendIntervall());
+      //DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") TEMP OFFSET : "));DDECLN(this->getList1().TemperatureOffset());
+      //DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") HUMI OFFSET : "));DDECLN(this->getList1().HumidityOffset());
+      //DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") SEND INTERV : "));DDECLN(this->getList1().sendIntervall());
     }
 };
 
@@ -420,12 +519,12 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, CHANN
 
     virtual void configChanged () {
       uint8_t disptimeout = getList0().backOnTime();
-      DPRINT(F("List0 DISP TIMEOUT  : ")); DDECLN(this->getList0().backOnTime());
+      //DPRINT(F("List0 DISP TIMEOUT  : ")); DDECLN(this->getList0().backOnTime());
       Display.setScreenKeysTimeout(disptimeout);
       uint8_t lowbat = getList0().lowBatLimit();
       if( lowbat > 0 )
         battery().low(lowbat);
-      DPRINT(F("List0 LOWBAT        : ")); DDECLN(this->getList0().lowBatLimit());
+      //DPRINT(F("List0 LOWBAT        : ")); DDECLN(this->getList0().lowBatLimit());
     }
 };
 
@@ -441,7 +540,7 @@ public:
     uint8_t old = ButtonType::state();
     ButtonType::state(s);
     if( s == ButtonType::released ) {
-      Display.setNextScreen(Screen::SCREEN_KEYS);
+      Display.setNextScreen(Screen::SCREEN_KEYLABELS);
     }
     else if( s == ButtonType::longreleased ) {
       sdev.startPairing();
@@ -492,6 +591,6 @@ void loop() {
     if (hal.battery.critical()) {
       hal.activity.sleepForever(hal);
     }
-    hal.activity.savePower<Sleep<>>(hal);
+      hal.activity.savePower<Sleep<>>(hal);
   }
 }
