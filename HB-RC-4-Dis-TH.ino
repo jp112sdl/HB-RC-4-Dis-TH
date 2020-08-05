@@ -5,7 +5,7 @@
 //- -----------------------------------------------------------------------------------------------------------------------
 
 // use Arduino IDE Board Setting: BOBUINO Layout
-
+#define SENSOR_ONLY
 #define DEVICE_CHANNEL_COUNT 4
 
 #include <Adafruit_GFX.h>
@@ -42,8 +42,17 @@ typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE } Screen;
 
 #define BLACK       0
 #define WHITE       1
-#define TEXT_FONT   u8g2_font_helvR14_tf
-#define HEADER_FONT u8g2_font_helvR08_tf
+#define FONT_KEYLABEL_TEXT        u8g2_font_helvR14_tf
+#define FONT_KEYLABEL_HEADER      u8g2_font_helvR08_tf
+#define FONT_TEMPERATURE          u8g2_font_logisoso58_tn
+#define FONT_TEMPERATURE_MAX      u8g2_font_logisoso92_tn
+#define FONT_TEMPERATURE_UNIT     u8g2_font_logisoso18_tf
+#define FONT_TEMPERATURE_MAX_UNIT u8g2_font_logisoso18_tf
+#define FONT_HUMIDITY             u8g2_font_logisoso34_tn
+#define FONT_HUMIDITY_UNIT        u8g2_font_logisoso16_tr
+#define FONT_INITSCREEN_BOLD      u8g2_font_helvB12_tr
+#define FONT_INITSCREEN_REG       u8g2_font_helvR12_tr
+
 
 #define CHANNEL_COUNT       4
 #define TEXT_LENGTH        10
@@ -77,19 +86,21 @@ typedef AskSin<LedType, IrqInternalBatt, RadioType> Hal;
 Hal hal;
 
 class DisplayType : public Alarm {
+  enum DefaultDisplayModes { DDM_TH = 0, DDM_T };
 private:
   uint8_t screen;
   uint8_t current_screen;
   uint8_t timeout;
   int16_t temperature;
   uint8_t humidity;
+  uint8_t defaultdisplaymode;
   uint16_t battery;
   uint16_t battery_low;
 private:
   uint16_t centerPosition(const char * text) { return centerPosition(display.width(), text); }
   uint16_t centerPosition(uint8_t width, const char * text) { return (width / 2) - (u8g2Fonts.getUTF8Width(text) / 2); }
 public:
-  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), battery(0), battery_low(0) {}
+  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), battery(0), battery_low(0) {}
   virtual ~DisplayType () {}
   void cancel (AlarmClock& clock) {
     clock.cancel(*this);
@@ -121,6 +132,10 @@ public:
     timeout = t;
   }
 
+  void setDefaultDisplayMode(uint8_t m) {
+    defaultdisplaymode = m;
+  }
+
   void setWeatherValues(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
     temperature = t;
     humidity = h;
@@ -145,43 +160,77 @@ public:
       //draw main frame on first call
       if (current_screen != Screen::SCREEN_TEMPERATURE) {
         display.fillRect(0, 0, display.width(), display.height(), WHITE);
-        for (uint8_t i = 0; i < 3; i ++)
-          display.drawLine(0, (display.height() / 2) - 8 + i, display.width(), (display.height() / 2) - 8 + i, BLACK);
+        if (defaultdisplaymode == DDM_TH) {
+          for (uint8_t i = 0; i < 3; i ++)
+            display.drawLine(0, (display.height() / 2) + i, display.width(), (display.height() / 2) + i, BLACK);
+        }
 
         display.drawLine(0, display.height() -17, display.width(), display.height() -17, BLACK);
         display.drawLine(0, display.height() -18, display.width(), display.height() -18, BLACK);
 
         display.drawRect(display.width()/2-14, display.height()-14, 20, 12, BLACK);
         display.fillRect(display.width()/2-14+20, display.height()-12, 4, 8, BLACK);
-     }
-
-
-      if (temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE) {
-        display.fillRect(0,0,display.width(),(display.height() / 2) - 8, WHITE);
-        float temp_float = this->temperature / 10.0F;
-        char t[4];
-        dtostrf(temp_float, 2, 1, t);
-
-        u8g2Fonts.setFont(u8g2_font_logisoso42_tn);
-        u8g2Fonts.drawStr(3, display.height() - 78, t);
-        u8g2Fonts.setCursor(u8g2Fonts.getUTF8Width(t) + 6, display.height() - 94);
-        u8g2Fonts.setFont(u8g2_font_logisoso22_tf);
-        u8g2Fonts.print(t_unit);
       }
 
-      if (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE) {
-        display.fillRect(0,(display.height() / 2) - 5 ,display.width(),(display.height() -17) - (display.height() / 2 ) , WHITE);
+      if (this->temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE) {
+
+        int8_t  t_int = this->temperature / 10;
+        uint8_t t_dec = this->temperature % 10;
+
+        if (defaultdisplaymode == DDM_TH) {
+          display.fillRect(0,0,display.width(),(display.height() / 2), WHITE);
+
+          u8g2Fonts.setFont(FONT_TEMPERATURE);
+          uint8_t t_width = u8g2Fonts.getUTF8Width(String(t_int).c_str());
+          u8g2Fonts.setFont(FONT_TEMPERATURE_UNIT);
+          uint8_t t_unit_width = u8g2Fonts.getUTF8Width(String(t_unit).c_str());
+
+          u8g2Fonts.setFont(FONT_TEMPERATURE);
+          u8g2Fonts.setCursor((display.width() / 2) - ((t_unit_width + t_width) / 2) - 6, display.height() - 67);
+          u8g2Fonts.print(t_int);
+
+          u8g2Fonts.setFont(FONT_TEMPERATURE_UNIT);
+          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 6, display.height() - 105);
+          u8g2Fonts.print(t_unit);
+          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 2, display.height() - 67);
+          u8g2Fonts.print(".");
+          u8g2Fonts.print(t_dec);
+        } else {
+          display.fillRect(0,0,display.width(),display.height() - 20, WHITE);
+
+          u8g2Fonts.setFont(FONT_TEMPERATURE_MAX);
+          uint8_t t_width = u8g2Fonts.getUTF8Width(String(t_int).c_str());
+          u8g2Fonts.setFont(FONT_TEMPERATURE_MAX_UNIT);
+          uint8_t t_unit_width = u8g2Fonts.getUTF8Width(String(t_unit).c_str());
+
+          u8g2Fonts.setFont(FONT_TEMPERATURE_MAX);
+          u8g2Fonts.setCursor((display.width() / 2) - ((t_unit_width + t_width) / 2) - 4, display.height() - 26);
+          u8g2Fonts.print(t_int);
+
+          u8g2Fonts.setFont(FONT_TEMPERATURE_MAX_UNIT);
+          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 15, display.height() - 98);
+          u8g2Fonts.print(t_unit);
+          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 12, display.height() - 26);
+          u8g2Fonts.print(".");
+          u8g2Fonts.print(t_dec);
+        }
+      }
+
+      if (defaultdisplaymode == DDM_TH && (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE)) {
+        display.fillRect(0,(display.height() / 2) + 3 ,display.width(),(display.height() -23) - (display.height() / 2 ) , WHITE);
         char hum[4];
         itoa(this->humidity, hum, 10);
-        u8g2Fonts.setFont(u8g2_font_logisoso34_tn);
+        
+        u8g2Fonts.setFont(FONT_HUMIDITY);
         uint8_t h_width = u8g2Fonts.getUTF8Width(hum);
-        u8g2Fonts.setFont(u8g2_font_logisoso20_tr);
+        u8g2Fonts.setFont(FONT_HUMIDITY_UNIT);
         uint8_t h_unit_width = u8g2Fonts.getUTF8Width(h_unit);
-        u8g2Fonts.setFont(u8g2_font_logisoso34_tn);
-        u8g2Fonts.setCursor((display.width() / 2) - ((h_unit_width + h_width) / 2), display.height() - 26);
+        
+        u8g2Fonts.setFont(FONT_HUMIDITY);
+        u8g2Fonts.setCursor((display.width() / 2) - ((h_unit_width + h_width) / 2), display.height() - 24);
         u8g2Fonts.print(hum);
-        u8g2Fonts.setCursor((display.width() / 2) + ((h_width / 2) / 2), display.height() - 26);
-        u8g2Fonts.setFont(u8g2_font_logisoso20_tr);
+        u8g2Fonts.setCursor((display.width() / 2) + ((h_width / 2) / 2), display.height() - 24);
+        u8g2Fonts.setFont(FONT_HUMIDITY_UNIT);
         u8g2Fonts.print(h_unit);
       }
 
@@ -215,7 +264,7 @@ public:
 
     display.refresh();
 
-    u8g2Fonts.setFont(HEADER_FONT);
+    u8g2Fonts.setFont(FONT_KEYLABEL_HEADER);
     for (uint8_t i = 0; i< CHANNEL_COUNT;i++) {
       if (DisplayFields[i].showHeader) {
         const char * ht = DisplayFields[i].HeaderText.c_str();
@@ -244,7 +293,7 @@ public:
     display.refresh();
 
 
-    u8g2Fonts.setFont(TEXT_FONT);
+    u8g2Fonts.setFont(FONT_KEYLABEL_TEXT);
     const uint8_t w = (display.width() / 2) - 2;
 
     for (uint8_t i = 0; i< CHANNEL_COUNT;i++) {
@@ -298,21 +347,21 @@ public:
     const char * compiledTime PROGMEM = __TIME__;
     const char * ser                  = (char*)serial;
 
-    u8g2Fonts.setFont(u8g2_font_helvB12_tr);
+    u8g2Fonts.setFont(FONT_INITSCREEN_BOLD);
     u8g2Fonts.setCursor(centerPosition(asksinpp), 14);
     u8g2Fonts.print(asksinpp);
 
     u8g2Fonts.setCursor(centerPosition(version), 32);
     u8g2Fonts.print(version);
 
-    u8g2Fonts.setFont(u8g2_font_helvR12_tr);
+    u8g2Fonts.setFont(FONT_INITSCREEN_REG);
     u8g2Fonts.setCursor(centerPosition(compiledDate), 68);
     u8g2Fonts.print(compiledDate);
     u8g2Fonts.setCursor(centerPosition(compiledTime), 88);
     u8g2Fonts.print(compiledTime);
 
-    u8g2Fonts.setFont(u8g2_font_helvB12_tr);
-    u8g2Fonts.setCursor(centerPosition((char*)serial), display.height()-2);
+    u8g2Fonts.setFont(FONT_INITSCREEN_BOLD);
+    u8g2Fonts.setCursor(centerPosition((char*)serial), display.height()-4);
     u8g2Fonts.print(ser);
 
     display.refresh();
@@ -331,15 +380,19 @@ public:
 };
 DisplayType Display;
 
-DEFREGISTER(Reg0, MASTERID_REGS, DREG_LOWBATLIMIT, DREG_BACKONTIME)
+DEFREGISTER(Reg0, MASTERID_REGS, DREG_LOWBATLIMIT, DREG_BACKONTIME, 0x03)
 class HBList0 : public RegList0<Reg0> {
   public:
     HBList0(uint16_t addr) : RegList0<Reg0>(addr) {}
+
+    uint8_t defaultDisplayMode () const { return this->readRegister(0x03,0); }
+    bool defaultDisplayMode (uint8_t value) const { return this->writeRegister(0x03,value); }
 
     void defaults () {
       clear();
       lowBatLimit(24);
       backOnTime(10);
+      defaultDisplayMode(0);
     }
 };
 
@@ -406,27 +459,34 @@ public:
     void configChanged() {
       RemoteChannel::configChanged();
 
-      DisplayFields[number() -1].showHeader = this->getList1().showHeader();
-      DisplayFields[number() -1].HeaderText = this->getList1().headerText();
-      DisplayFields[number() -1].MainText1 = this->getList1().mainText1();
-      DisplayFields[number() -1].MainText2 = this->getList1().mainText2();
+      uint8_t idx = number() -1;
 
-      DisplayFields[number() -1].HeaderText.trim();
-      DisplayFields[number() -1].MainText1.trim();
-      DisplayFields[number() -1].MainText2.trim();
+      String ht = this->getList1().headerText();
+      String mt1 = this->getList1().mainText1();
+      String mt2 = this->getList1().mainText2();
+
+      ht.trim();
+      mt1.trim();
+      mt2.trim();
 
       typedef struct rmap { char in; String out; } rmap_t;
-      const rmap_t rplmap[8] = { { '{', "ä" }, { '|', "ö" }, { '}', "ü" }, { '[', "Ä" }, { '#', "Ö" }, { '$', "Ü" }, { '~', "ß" }, { '\'', "=" } };
+      const rmap_t rplmap[] = { { '{', "ä" }, { '|', "ö" }, { '}', "ü" }, { '[', "Ä" }, { '#', "Ö" }, { '$', "Ü" }, { '~', "ß" }, { '\'', "=" } };
       for (uint8_t i = 0; i < 8; i++) {
-        DisplayFields[number() -1].HeaderText.replace(String(rplmap[i].in), rplmap[i].out);
-         DisplayFields[number() -1].MainText1.replace(String(rplmap[i].in), rplmap[i].out);
-         DisplayFields[number() -1].MainText2.replace(String(rplmap[i].in), rplmap[i].out);
+         ht.replace(String(rplmap[i].in), rplmap[i].out);
+         mt1.replace(String(rplmap[i].in), rplmap[i].out);
+         mt2.replace(String(rplmap[i].in), rplmap[i].out);
       }
 
+      DisplayFields[idx].showHeader = this->getList1().showHeader();
+      DisplayFields[idx].HeaderText = ht;
+      DisplayFields[idx].MainText1 = mt1;
+      DisplayFields[idx].MainText2 = mt2;
+
+
       //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") showHeader : "));DDECLN(this->getList1().showHeader());
-      //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") HeaderText : "));DPRINTLN(DisplayFields[number() -1].HeaderText);
-      //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") MainText1  : "));DPRINTLN(this->getList1().mainText1());
-      //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") MainText2  : "));DPRINTLN(this->getList1().mainText2());
+      //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") HeaderText : "));DPRINTLN(ht);
+      //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") MainText1  : "));DPRINTLN(mt1);
+      //DPRINT(F("RC (#"));DDEC(number());DPRINT(F(") MainText2  : "));DPRINTLN(mt2);
     }
 };
 
@@ -519,12 +579,17 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, CHANN
 
     virtual void configChanged () {
       uint8_t disptimeout = getList0().backOnTime();
-      //DPRINT(F("List0 DISP TIMEOUT  : ")); DDECLN(this->getList0().backOnTime());
+      //DPRINT(F("List0 DISP TIMEOUT         : ")); DDECLN(this->getList0().backOnTime());
       Display.setScreenKeysTimeout(disptimeout);
+
+      uint8_t defaultdisplaymode = getList0().defaultDisplayMode();
+      //DPRINT(F("List0 DEFAULT DISPLAYMODE  : ")); DDECLN(this->getList0().backOnTime());
+      Display.setDefaultDisplayMode(defaultdisplaymode);
+      if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp();
+
       uint8_t lowbat = getList0().lowBatLimit();
-      if( lowbat > 0 )
-        battery().low(lowbat);
-      //DPRINT(F("List0 LOWBAT        : ")); DDECLN(this->getList0().lowBatLimit());
+      if( lowbat > 0 ) battery().low(lowbat);
+      //DPRINT(F("List0 LOWBAT               : ")); DDECLN(this->getList0().lowBatLimit());
     }
 };
 
