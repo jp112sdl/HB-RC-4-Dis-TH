@@ -84,8 +84,6 @@ public:
       showTemp();
       break;
     }
-   // Menu Button pressed...
-   // updateDisplay(mustRefreshDisplay);
   }
   void setNextScreen(Screen scr) {
     screen = scr;
