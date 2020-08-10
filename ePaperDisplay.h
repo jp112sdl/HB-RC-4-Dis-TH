@@ -28,14 +28,15 @@ typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE } Screen;
 #define WHITE       GxEPD_WHITE
 
 #define FONT_KEYLABEL_TEXT        u8g2_font_helvB14_tf
-#define FONT_KEYLABEL_HEADER      u8g2_font_helvB08_tf
+#define FONT_HEIGHT_KEYLABEL_TEXT 18
+#define FONT_KEYLABEL_HEADER      u8g2_font_9x18B_mf
 
-#define FONT_TEMPERATURE          u8g2_font_logisoso58_tn
+#define FONT_TEMPERATURE          u8g2_font_logisoso78_tn
+#define FONT_TEMPERATURE_UNIT     u8g2_font_logisoso24_tf
+#define FONT_HUMIDITY             u8g2_font_logisoso42_tn
+#define FONT_HUMIDITY_UNIT        u8g2_font_logisoso18_tr
 #define FONT_TEMPERATURE_MAX      u8g2_font_logisoso92_tn
-#define FONT_TEMPERATURE_UNIT     u8g2_font_logisoso18_tf
 #define FONT_TEMPERATURE_MAX_UNIT u8g2_font_logisoso18_tf
-#define FONT_HUMIDITY             u8g2_font_logisoso34_tn
-#define FONT_HUMIDITY_UNIT        u8g2_font_logisoso16_tr
 #define FONT_INITSCREEN_BOLD      u8g2_font_helvB18_tr
 #define FONT_INITSCREEN_REG       u8g2_font_helvR18_tr
 
@@ -58,13 +59,14 @@ private:
   int16_t temperature;
   uint8_t humidity;
   uint8_t defaultdisplaymode;
+  bool displaymodehaschanged;
   uint16_t battery;
   uint16_t battery_low;
 private:
   uint16_t centerPosition(const char * text) { return centerPosition(display.width(), text); }
   uint16_t centerPosition(uint8_t width, const char * text) { return (width / 2) - (u8g2Fonts.getUTF8Width(text) / 2); }
 public:
-  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), battery(0), battery_low(0) {}
+  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery(0), battery_low(0) {}
   virtual ~DisplayType () {}
   void cancel (AlarmClock& clock) {
     clock.cancel(*this);
@@ -94,7 +96,16 @@ public:
     timeout = t;
   }
 
+  void displayModeHasChanged(bool c) {
+    displaymodehaschanged = c;
+  }
+
+  bool displayModeHasChanged() {
+    return displaymodehaschanged;
+  }
+
   void defaultDisplayMode(uint8_t m) {
+    if (m != defaultdisplaymode) displayModeHasChanged(true);
     defaultdisplaymode = m;
   }
 
@@ -126,27 +137,29 @@ public:
       uint8_t battpct = (100 * diff) / max;
 
       //draw main frame on first call
-      if (current_screen != Screen::SCREEN_TEMPERATURE) {
+      if (current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
         display.fillScreen(GxEPD_WHITE);
+
+        display.drawRoundRect(5, 2, display.width() - 10, display.height() - 30, 5, BLACK);
+        display.drawRoundRect(4, 1, display.width() - 8, display.height() - 28, 5, BLACK);
         if (defaultdisplaymode == DDM_TH) {
-          for (uint8_t i = 0; i < 3; i ++)
-            display.drawLine(0, (display.height() / 2) + i, display.width(), (display.height() / 2) + i, BLACK);
+          for (uint8_t i = 1; i < 3; i ++)
+            //horizontal divider temp / humidity
+            display.drawLine(6, (display.height() / 2) + i, display.width()-6, (display.height() / 2) + i, BLACK);
         }
 
-        display.drawLine(0, display.height() -17, display.width(), display.height() -17, BLACK);
-        display.drawLine(0, display.height() -18, display.width(), display.height() -18, BLACK);
-
-        display.drawRect(display.width()/2-14, display.height()-14, 20, 12, BLACK);
-        display.fillRect(display.width()/2-14+20, display.height()-12, 4, 8, BLACK);
+        //battery icon
+        display.drawRect(display.width()/2-20, display.height()-20, 32, 18, BLACK);
+        display.fillRect(display.width()/2-20+32, display.height()-16, 6, 10, BLACK);
       }
 
-      if (this->temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE) {
+      if (this->temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
 
         int8_t  t_int = this->temperature / 10;
         uint8_t t_dec = this->temperature % 10;
 
         if (defaultdisplaymode == DDM_TH) {
-          display.fillRect(0,0,display.width(),(display.height() / 2), WHITE);
+          display.fillRect(6,6,display.width()-12,(display.height() / 2) - 6, WHITE);
 
           u8g2Fonts.setFont(FONT_TEMPERATURE);
           uint8_t t_width = u8g2Fonts.getUTF8Width(String(t_int).c_str());
@@ -154,17 +167,17 @@ public:
           uint8_t t_unit_width = u8g2Fonts.getUTF8Width(String(t_unit).c_str());
 
           u8g2Fonts.setFont(FONT_TEMPERATURE);
-          u8g2Fonts.setCursor((display.width() / 2) - ((t_unit_width + t_width) / 2) - 6, display.height() - 67);
+          u8g2Fonts.setCursor((display.width() / 2) - ((t_unit_width + t_width) / 2) - 6, display.height() - 110);
           u8g2Fonts.print(t_int);
 
           u8g2Fonts.setFont(FONT_TEMPERATURE_UNIT);
-          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 6, display.height() - 105);
+          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 6, display.height() - 165);
           u8g2Fonts.print(t_unit);
-          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 2, display.height() - 67);
+          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 4, display.height() - 110);
           u8g2Fonts.print(".");
           u8g2Fonts.print(t_dec);
         } else {
-          display.fillRect(0,0,display.width(),display.height() - 20, WHITE);
+          display.fillRect(6,6,display.width()-12,display.height() - 36, WHITE);
 
           u8g2Fonts.setFont(FONT_TEMPERATURE_MAX);
           uint8_t t_width = u8g2Fonts.getUTF8Width(String(t_int).c_str());
@@ -184,8 +197,8 @@ public:
         }
       }
 
-      if (defaultdisplaymode == DDM_TH && (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE)) {
-        display.fillRect(0,(display.height() / 2) + 3 ,display.width(),(display.height() -23) - (display.height() / 2 ) , WHITE);
+      if (defaultdisplaymode == DDM_TH && (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true)) {
+        display.fillRect(6,(display.height() / 2) + 3 ,display.width()-12,(display.height() -36) - (display.height() / 2 ) , WHITE);
         char hum[4];
         itoa(this->humidity, hum, 10);
 
@@ -195,22 +208,23 @@ public:
         uint8_t h_unit_width = u8g2Fonts.getUTF8Width(h_unit);
 
         u8g2Fonts.setFont(FONT_HUMIDITY);
-        u8g2Fonts.setCursor((display.width() / 2) - ((h_unit_width + h_width) / 2), display.height() - 24);
+        u8g2Fonts.setCursor((display.width() / 2) - ((h_unit_width + h_width) / 2), display.height() - 42);
         u8g2Fonts.print(hum);
-        u8g2Fonts.setCursor((display.width() / 2) + ((h_width / 2) / 2), display.height() - 24);
+        u8g2Fonts.setCursor((display.width() / 2) + ((h_width / 2) / 2), display.height() - 42);
         u8g2Fonts.setFont(FONT_HUMIDITY_UNIT);
         u8g2Fonts.print(h_unit);
       }
 
-      if (battpct != last_battpct || current_screen != Screen::SCREEN_TEMPERATURE) {
-        display.fillRect(display.width()/2-14 + 3 , display.height()-12, 4, 8, battpct > 40 ? BLACK: WHITE);
-        display.fillRect(display.width()/2-14 + 3 + 4 + 1 , display.height()-12, 4, 8, battpct > 60 ? BLACK : WHITE);
-        display.fillRect(display.width()/2-14 + 3 + 4 + 1 + 4 + 1 , display.height()-12, 4, 8, battpct > 80 ? BLACK : WHITE);
+      if (battpct != last_battpct || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
+        display.fillRect(display.width()/2-20 + 3 , display.height()-18, 8, 14, battpct > 40 ? BLACK: WHITE);
+        display.fillRect(display.width()/2-20 + 3 + 8 + 1 , display.height()-18, 8, 14, battpct > 60 ? BLACK : WHITE);
+        display.fillRect(display.width()/2-20 + 3 + 8 + 1 + 8 + 1 , display.height()-18, 8, 14, battpct > 80 ? BLACK : WHITE);
       }
 
       display.display();
 
       current_screen = Screen::SCREEN_TEMPERATURE;
+      displayModeHasChanged(false);
       last_temperature = temperature;
       last_humidity = humidity;
       last_battpct = battpct;
@@ -228,25 +242,26 @@ public:
       display.fillCircle(i * 4, display.height()/2, 1, BLACK);
 
     u8g2Fonts.setFont(FONT_KEYLABEL_HEADER);
+    static const uint8_t headerBoxHeight = (display.height() / 10) + 4;
     for (uint8_t i = 0; i< DEVICE_CHANNEL_COUNT;i++) {
       if (DisplayFields[i].showHeader) {
         const char * ht = DisplayFields[i].HeaderText.c_str();
         if (i == 0) {
-          display.drawRoundRect(0, 1, display.width() / 2 - 2, 14, 2, BLACK);
-          u8g2Fonts.setCursor(centerPosition((display.width() / 2), ht),12);
+          display.drawRoundRect(0, 1, display.width() / 2 - 3, headerBoxHeight, 2, BLACK);
+          u8g2Fonts.setCursor(centerPosition((display.width() / 2)-2, ht),(display.height() / 10) - 2);
         }
         if (i == 1) {
-          display.drawRoundRect(display.width() / 2 + 1, 1, display.width() / 2-2, 14, 2, BLACK);
-          u8g2Fonts.setCursor((display.width() / 2) + centerPosition((display.width() / 2), ht),12);
+          display.drawRoundRect(display.width() / 2 + 2, 1, display.width() / 2-2, headerBoxHeight, 2, BLACK);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition((display.width() / 2) + 1, ht),(display.height() / 10)-2);
         }
 
         if (i == 2) {
-          display.drawRoundRect(0, display.height()-15, display.width() / 2 - 2, 14, 2, BLACK);
-          u8g2Fonts.setCursor(centerPosition((display.width() / 2), ht),display.height()-4);
+          display.drawRoundRect(0, display.height() - (display.height() / 10) - 4, display.width() / 2 - 3, headerBoxHeight, 2, BLACK);
+          u8g2Fonts.setCursor(centerPosition((display.width() / 2) - 2, ht),display.height()-7);
         }
         if (i == 3) {
-          display.drawRoundRect(display.width() / 2 + 1, display.height()-15, display.width() / 2-2, 14, 2, BLACK);
-          u8g2Fonts.setCursor((display.width() / 2) + centerPosition((display.width() / 2), ht),display.height()-4);
+          display.drawRoundRect(display.width() / 2 + 2, display.height() - (display.height() / 10) - 4, display.width() / 2-2, headerBoxHeight, 2, BLACK);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition((display.width() / 2) + 1, ht),display.height()-7);
         }
 
         u8g2Fonts.print(ht);
@@ -255,41 +270,41 @@ public:
     }
 
     u8g2Fonts.setFont(FONT_KEYLABEL_TEXT);
-    const uint8_t w = (display.width() / 2) - 2;
+    static const uint8_t w = (display.width() / 2) - 2;
 
     for (uint8_t i = 0; i< DEVICE_CHANNEL_COUNT;i++) {
       if (DisplayFields[i].MainText2 == "") {
         const char * mt1 = DisplayFields[i].MainText1.c_str();
         if (i == 0)
-          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 2) + 14);
+          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 3) - FONT_HEIGHT_KEYLABEL_TEXT / 4);
         if (i == 1)
-          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 2) + 14);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 3) - FONT_HEIGHT_KEYLABEL_TEXT / 4);
         if (i == 2)
-          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 5) + 14);
+          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 6) - FONT_HEIGHT_KEYLABEL_TEXT / 4);
         if (i == 3)
-          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 5) + 14);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 6) - FONT_HEIGHT_KEYLABEL_TEXT / 4);
         u8g2Fonts.print(mt1);
       } else {
         const char * mt1 = DisplayFields[i].MainText1.c_str();
         if (i == 0)
-          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 3) - 10);
+          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 3) - 12);
         if (i == 1)
-          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 3) - 10);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 3) - 12);
         if (i == 2)
-          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 6) - 10);
+          u8g2Fonts.setCursor(centerPosition(w, mt1), ((display.height() / 8) * 6) - 12);
         if (i == 3)
-          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 6) - 10);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt1), ((display.height() / 8) * 6) - 12);
         u8g2Fonts.print(mt1);
 
         const char * mt2 = DisplayFields[i].MainText2.c_str();
         if (i == 0)
-          u8g2Fonts.setCursor(centerPosition(w, mt2), ((display.height() / 8) * 3) + 8);
+          u8g2Fonts.setCursor(centerPosition(w, mt2), ((display.height() / 8) * 3) + 10);
         if (i == 1)
-          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt2), ((display.height() / 8) * 3) + 8);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt2), ((display.height() / 8) * 3) + 10);
         if (i == 2)
-          u8g2Fonts.setCursor(centerPosition(w, mt2), ((display.height() / 8) * 6) + 8);
+          u8g2Fonts.setCursor(centerPosition(w, mt2), ((display.height() / 8) * 6) + 10);
         if (i == 3)
-          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt2), ((display.height() / 8) * 6) + 8);
+          u8g2Fonts.setCursor((display.width() / 2) + centerPosition(w, mt2), ((display.height() / 8) * 6) + 10);
         u8g2Fonts.print(mt2);
       }
     }
@@ -316,9 +331,9 @@ public:
     u8g2Fonts.print(version);
 
     u8g2Fonts.setFont(FONT_INITSCREEN_REG);
-    u8g2Fonts.setCursor(centerPosition(compiledDate), 82);
+    u8g2Fonts.setCursor(centerPosition(compiledDate), 90);
     u8g2Fonts.print(compiledDate);
-    u8g2Fonts.setCursor(centerPosition(compiledTime), 110);
+    u8g2Fonts.setCursor(centerPosition(compiledTime), 120);
     u8g2Fonts.print(compiledTime);
 
     u8g2Fonts.setFont(FONT_INITSCREEN_BOLD);
@@ -327,7 +342,7 @@ public:
 
     display.display();
 
-    set(seconds2ticks(2), sysclock);
+    set(seconds2ticks(1), sysclock);
   }
 
   void init() {

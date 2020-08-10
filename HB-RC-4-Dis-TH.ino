@@ -265,9 +265,10 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
         uint8_t ddm = getList0().defaultDisplayMode();
         //DPRINT(F("List0 DEFAULT DISPLAYMODE  : ")); DDECLN(this->getList0().defaultDisplayMode());
         Display.defaultDisplayMode(ddm);
-        if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp();
+        if (Display.currentScreen() == SCREEN_TEMPERATURE) {
+          Display.set(seconds2ticks(8), sysclock);
+        }
       }
-
 
       uint8_t lowbat = getList0().lowBatLimit();
       if( lowbat > 0 ) battery().low(lowbat);

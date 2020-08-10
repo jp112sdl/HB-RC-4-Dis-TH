@@ -51,13 +51,14 @@ private:
   int16_t temperature;
   uint8_t humidity;
   uint8_t defaultdisplaymode;
+  bool displaymodehaschanged;
   uint16_t battery;
   uint16_t battery_low;
 private:
   uint16_t centerPosition(const char * text) { return centerPosition(display.width(), text); }
   uint16_t centerPosition(uint8_t width, const char * text) { return (width / 2) - (u8g2Fonts.getUTF8Width(text) / 2); }
 public:
-  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), battery(0), battery_low(0) {}
+  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery(0), battery_low(0) {}
   virtual ~DisplayType () {}
   void cancel (AlarmClock& clock) {
     clock.cancel(*this);
@@ -87,7 +88,16 @@ public:
     timeout = t;
   }
 
+  void displayModeHasChanged(bool c) {
+    displaymodehaschanged = c;
+  }
+
+  bool displayModeHasChanged() {
+    return displaymodehaschanged;
+  }
+
   void defaultDisplayMode(uint8_t m) {
+    if (m != defaultdisplaymode) displayModeHasChanged(true);
     defaultdisplaymode = m;
   }
 
@@ -115,7 +125,7 @@ public:
       static uint8_t last_battpct = 0;
 
       //draw main frame on first call
-      if (current_screen != Screen::SCREEN_TEMPERATURE) {
+      if (current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
         display.fillRect(0, 0, display.width(), display.height(), WHITE);
         if (defaultdisplaymode == DDM_TH) {
           for (uint8_t i = 0; i < 3; i ++)
@@ -129,7 +139,7 @@ public:
         display.fillRect(display.width()/2-14+20, display.height()-12, 4, 8, BLACK);
       }
 
-      if (this->temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE) {
+      if (this->temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
 
         int8_t  t_int = this->temperature / 10;
         uint8_t t_dec = this->temperature % 10;
@@ -173,7 +183,7 @@ public:
         }
       }
 
-      if (defaultdisplaymode == DDM_TH && (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE)) {
+      if (defaultdisplaymode == DDM_TH && (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true)) {
         display.fillRect(0,(display.height() / 2) + 3 ,display.width(),(display.height() -23) - (display.height() / 2 ) , WHITE);
         char hum[4];
         itoa(this->humidity, hum, 10);
@@ -195,7 +205,7 @@ public:
       uint8_t diff = battery - battery_low;
       uint8_t battpct = (100 * diff) / max;
 
-      if (battpct != last_battpct || current_screen != Screen::SCREEN_TEMPERATURE) {
+      if (battpct != last_battpct || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
         display.fillRect(display.width()/2-14 + 3 , display.height()-12, 4, 8, battpct > 40 ? BLACK: WHITE);
         display.fillRect(display.width()/2-14 + 3 + 4 + 1 , display.height()-12, 4, 8, battpct > 60 ? BLACK : WHITE);
         display.fillRect(display.width()/2-14 + 3 + 4 + 1 + 4 + 1 , display.height()-12, 4, 8, battpct > 80 ? BLACK : WHITE);
@@ -204,6 +214,7 @@ public:
       display.refresh();
 
       current_screen = Screen::SCREEN_TEMPERATURE;
+      displayModeHasChanged(false);
       last_temperature = temperature;
       last_humidity = humidity;
       last_battpct = battpct;
