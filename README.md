@@ -19,7 +19,12 @@ Als Beschriftung lassen sich
 
 hinterlegen
 
-<img src="Images/IMG_1491.jpg" width=500 /><img src="Images/IMG_1492.jpg" width=500 />
+Nur Temperaturanzeige:<br>
+<img src="Images/IMG_1488.jpg" width=500 /><br><br>
+Temperatur- und Luftfeuchtigkeit:<br>
+<img src="Images/IMG_1491.jpg" width=500 /><br><br>
+Tasterbeschriftungen:<br>
+<img src="Images/IMG_1492.jpg" width=500 />
 
 ### CCU:
 
