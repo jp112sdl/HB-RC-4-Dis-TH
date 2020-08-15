@@ -185,13 +185,13 @@ public:
           uint8_t t_unit_width = u8g2Fonts.getUTF8Width(String(t_unit).c_str());
 
           u8g2Fonts.setFont(FONT_TEMPERATURE_MAX);
-          u8g2Fonts.setCursor((display.width() / 2) - ((t_unit_width + t_width) / 2) - 4, display.height() - 76);
+          u8g2Fonts.setCursor((display.width() / 2) - ((t_unit_width + t_width) / 2) - 4, display.height() - 70);
           u8g2Fonts.print(t_int);
 
           u8g2Fonts.setFont(FONT_TEMPERATURE_MAX_UNIT);
-          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 15, display.height() - 148);
+          u8g2Fonts.setCursor((display.width() / 2) + (t_width / 2), display.height() - 142);
           u8g2Fonts.print(t_unit);
-          u8g2Fonts.setCursor((display.width() / 2) + ((t_width / 2) / 2) + 12, display.height() - 76);
+          u8g2Fonts.setCursor((display.width() / 2) + (t_width / 2), display.height() - 70);
           u8g2Fonts.print(".");
           u8g2Fonts.print(t_dec);
         }
