@@ -31,7 +31,8 @@ Tasterbeschriftungen:<br>
 ### PCB Version 1
 
 <img src="PCB/Front.png" width=300 /><img src="PCB/Back.png" width=300 /><br>
-
+**[Abstandhalter](https://github.com/jp112sdl/HB-RC-4-Dis-TH/blob/master/PCB/HB-RC-4-Dis-TH%20ePaper%20Spacer.stl) zwischen Platine und ePaper:**<br/>
+<img src="Images/ePaper spacer.png" width=300 /><br/>
 
 ### CCU:
 
