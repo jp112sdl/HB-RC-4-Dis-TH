@@ -3,7 +3,7 @@
 
 Als Vorlage/Idee diente das [AVM FRITZ!DECT 440](https://avm.de/produkte/fritzdect/fritzdect-440/).
 
-### Prototyp:
+### Aufbau:
 
 An den 4 Ecken befinden sich Taster, um über 4 verschiedenen Tasterkanäle Geräte zu steuern.<br/>
 Unten mittig ist der Mode-Taster:
@@ -19,12 +19,19 @@ Als Beschriftung lassen sich
 
 hinterlegen
 
+### Prototyp
+
 Nur Temperaturanzeige:<br>
-<img src="Images/IMG_1488.jpg" width=500 /><br><br>
+<img src="Images/IMG_1488.jpg" width=300 /><br><br>
 Temperatur- und Luftfeuchtigkeit:<br>
-<img src="Images/IMG_1491.jpg" width=500 /><br><br>
+<img src="Images/IMG_1491.jpg" width=300 /><br><br>
 Tasterbeschriftungen:<br>
-<img src="Images/IMG_1492.jpg" width=500 />
+<img src="Images/IMG_1492.jpg" width=300 />
+
+### PCB Version 1
+
+<img src="PCB/Front.png" width=300 /><img src="PCB/Back.png" width=300 /><br>
+
 
 ### CCU:
 
