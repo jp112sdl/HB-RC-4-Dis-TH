@@ -361,11 +361,6 @@
       (net 3 GND))
     (pad 1 thru_hole oval (at 0 0) (size 1.7 1.7) (drill 1) (layers *.Cu *.Mask)
       (net 12 +3V3))
-    (model ${KISYS3DMOD}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x04_P2.54mm_Vertical.wrl
-      (at (xyz 0 0 0))
-      (scale (xyz 1 1 1))
-      (rotate (xyz 0 0 0))
-    )
   )
 
   (module Button_Switch_THT:SW_PUSH_6mm_H5mm (layer F.Cu) (tedit 5A02FE31) (tstamp 5F37FEA3)
