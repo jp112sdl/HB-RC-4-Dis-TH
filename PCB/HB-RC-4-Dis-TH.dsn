@@ -86,14 +86,14 @@
             63779.5 -94346.9  63800 -94100  63779.5 -93853.1  63718.7 -93613
             63619.2 -93386.1  63483.7 -93178.7  63315.9 -92996.4  63120.4 -92844.2
             62902.5 -92726.3  62668.2 -92645.9  62423.9 -92605.1  62176.1 -92605.1))
-    (keepout "" (polygon F.Cu 0  66050 -110500  62150 -110500  62150 -110100  66050 -110100
-            66050 -110500))
-    (keepout "" (polygon B.Cu 0  66050 -110500  62150 -110500  62150 -110100  66050 -110100
-            66050 -110500))
-    (keepout "" (polygon F.Cu 0  40800 -115550  24850 -115550  24850 -111700  23000 -111700
+    (wire_keepout "" (polygon F.Cu 0  40800 -115550  24850 -115550  24850 -111700  23000 -111700
             23000 -102400  24750 -102400  24750 -99450  40800 -99450  40800 -115550))
-    (keepout "" (polygon B.Cu 0  40800 -115550  24850 -115550  24850 -111700  23000 -111700
+    (wire_keepout "" (polygon B.Cu 0  40800 -115550  24850 -115550  24850 -111700  23000 -111700
             23000 -102400  24750 -102400  24750 -99450  40800 -99450  40800 -115550))
+    (keepout "" (polygon F.Cu 0  67250 -113450  63350 -113450  63350 -113050  67250 -113050
+            67250 -113450))
+    (keepout "" (polygon B.Cu 0  67250 -113450  63350 -113450  63350 -113050  67250 -113050
+            67250 -113450))
     (via "Via[0-1]_800:400_um")
     (rule
       (width 250)
@@ -103,11 +103,39 @@
     )
   )
   (placement
+    (component Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder
+      (place C17 53950 -101900 back 0 (PN 100n))
+      (place C15 51550 -82875 back 180 (PN 100n))
+      (place R3 45750 -82850 back 180 (PN 10k))
+    )
+    (component Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder::1
+      (place C16 59825 -91175 back 90 (PN 100n))
+      (place C14 42275 -92300 back 270 (PN 100n))
+      (place R8 51925 -120675 back 0 (PN "0.47 / 3.00"))
+      (place R6 43800 -101200 back 0 (PN 100k))
+      (place C13 43600 -119200 back 180 (PN 1µF/50V))
+      (place C12 60900 -102225 back 180 (PN 1µF/50V))
+      (place C11 52050 -106000 back 180 (PN 1µF/50V))
+      (place C10 43800 -106200 back 0 (PN 1µF/50V))
+      (place C9 43800 -103600 back 0 (PN 1µF/50V))
+      (place C8 43600 -121600 back 0 (PN 1µF/25V))
+      (place C7 43600 -116200 back 180 (PN 1µF/25V))
+      (place C6 43800 -113400 back 0 (PN 1µF/25V))
+      (place C5 43800 -108600 back 0 (PN 1µF/25V))
+      (place C4 43800 -111000 back 180 (PN 1µF/25V))
+      (place C3 52000 -116675 back 0 (PN 1µF/25V))
+      (place R5 38000 -88650 back 0 (PN 10k))
+      (place R4 38000 -86500 back 0 (PN 10k))
+      (place R2 54850 -127650 back 270 (PN 1k))
+      (place R1 38050 -127600 back 270 (PN 1k))
+      (place C2 50125 -101900 back 180 (PN 100n))
+      (place C1 22900 -114500 back 0 (PN 100n))
+    )
     (component "Connectors_Hirose:Hirose_FH12-24S-0.5SH_1x24_P0.5mm_Horizontal"
       (place J3 58300 -106500 front 90 (PN eInk))
     )
     (component Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical
-      (place SHT31 31800 -81350 front 0 (PN SHT31))
+      (place J2 31800 -81350 front 0 (PN SHT31))
     )
     (component Button_Switch_THT:SW_PUSH_6mm_H5mm
       (place SW5 44000 -131000 front 90 (PN Config))
@@ -120,33 +148,10 @@
       (place J4 32700 -96950 back 270 (PN ISP))
     )
     (component "Capacitors_Tantalum_SMD:CP_Tantalum_Case-B_EIA-3528-21_Hand"
-      (place C15 69200 -118850 back 90 (PN 100µ/10V))
+      (place C18 59225 -127000 back 90 (PN 100µ/10V))
     )
     (component Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical
       (place J5 22800 -91800 back 90 (PN Power))
-    )
-    (component Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder
-      (place C14 31250 -92250 back 0 (PN 100n))
-      (place R8 55800 -122000 back 0 (PN "0.47 / 3.00"))
-      (place R6 43800 -101200 back 0 (PN 100k))
-      (place C13 43600 -119200 back 180 (PN 1µF/50V))
-      (place C12 58200 -102200 back 180 (PN 1µF/50V))
-      (place C11 51200 -102150 back 180 (PN 1µF/50V))
-      (place C10 43800 -106200 back 0 (PN 1µF/50V))
-      (place C9 43800 -103600 back 0 (PN 1µF/50V))
-      (place C8 43600 -121600 back 0 (PN 1µF/25V))
-      (place C7 43600 -116200 back 180 (PN 1µF/25V))
-      (place C6 43800 -113400 back 0 (PN 1µF/25V))
-      (place C5 43800 -108600 back 0 (PN 1µF/25V))
-      (place C4 43800 -111000 back 180 (PN 1µF/25V))
-      (place C3 53000 -117150 back 0 (PN 1µF/25V))
-      (place R5 38650 -88400 back 0 (PN 10k))
-      (place R4 38650 -86250 back 0 (PN 10k))
-      (place R3 50800 -82800 back 0 (PN 10k))
-      (place R2 54850 -127650 back 270 (PN 1k))
-      (place R1 38050 -127600 back 270 (PN 1k))
-      (place C2 69950 -98250 back 180 (PN 100n))
-      (place C1 22900 -114500 back 0 (PN 100n))
     )
     (component Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical
       (place J1 34600 -117800 back 270 (PN FTDI))
@@ -155,15 +160,15 @@
       (place U2 45350 -116000 front 180 (PN CC1101))
     )
     (component "Package_TO_SOT_SMD:SOT-23"
-      (place Q1 64100 -105300 back 90 (PN IRLML6346TRBPF))
+      (place Q1 65300 -108250 back 90 (PN IRLML6346TRBPF))
     )
     (component "Inductor_SMD:L_Wuerth_MAPI-3012"
-      (place L1 64100 -110300 back 270 (PN 100µH))
+      (place L1 65300 -113250 back 270 (PN 100µH))
     )
     (component "Diode_SMD:D_SOD-123"
-      (place D5 55900 -110000 back 180 (PN MBR0530))
-      (place D4 55900 -107500 back 0 (PN MBR0530))
-      (place D3 55900 -105000 back 0 (PN MBR0530))
+      (place D5 57100 -112950 back 180 (PN MBR0530))
+      (place D4 57100 -110450 back 0 (PN MBR0530))
+      (place D3 57100 -107950 back 0 (PN MBR0530))
     )
     (component "Package_QFP:TQFP-44_10x10mm_P0.8mm"
       (place U1 51150 -91450 back 90 (PN "ATmega644PA-AU"))
@@ -174,6 +179,34 @@
     )
   )
   (library
+    (image Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder
+      (outline (path signal 100  -1000 -600  -1000 600))
+      (outline (path signal 100  -1000 600  1000 600))
+      (outline (path signal 100  1000 600  1000 -600))
+      (outline (path signal 100  1000 -600  -1000 -600))
+      (outline (path signal 120  -261.252 710  261.252 710))
+      (outline (path signal 120  -261.252 -710  261.252 -710))
+      (outline (path signal 50  -1850 -950  -1850 950))
+      (outline (path signal 50  -1850 950  1850 950))
+      (outline (path signal 50  1850 950  1850 -950))
+      (outline (path signal 50  1850 -950  -1850 -950))
+      (pin RoundRect[T]Pad_1150x1400_250.95_um 1 -1025 0)
+      (pin RoundRect[T]Pad_1150x1400_250.95_um 2 1025 0)
+    )
+    (image Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder::1
+      (outline (path signal 50  1850 -950  -1850 -950))
+      (outline (path signal 50  1850 950  1850 -950))
+      (outline (path signal 50  -1850 950  1850 950))
+      (outline (path signal 50  -1850 -950  -1850 950))
+      (outline (path signal 120  -261.252 -710  261.252 -710))
+      (outline (path signal 120  -261.252 710  261.252 710))
+      (outline (path signal 100  1000 -600  -1000 -600))
+      (outline (path signal 100  1000 600  1000 -600))
+      (outline (path signal 100  -1000 600  1000 600))
+      (outline (path signal 100  -1000 -600  -1000 600))
+      (pin RoundRect[T]Pad_1150x1400_250.95_um 2 1025 0)
+      (pin RoundRect[T]Pad_1150x1400_250.95_um 1 -1025 0)
+    )
     (image "Connectors_Hirose:Hirose_FH12-24S-0.5SH_1x24_P0.5mm_Horizontal"
       (outline (path signal 100  -7550 -3400  -7550 1200))
       (outline (path signal 100  -6950 -3400  -7550 -3400))
@@ -332,20 +365,6 @@
       (outline (path signal 100  -635 1270  1270 1270))
       (pin Oval[A]Pad_1700x1700_um 2 0 -2540)
       (pin Rect[A]Pad_1700x1700_um 1 0 0)
-    )
-    (image Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder
-      (outline (path signal 50  1850 -950  -1850 -950))
-      (outline (path signal 50  1850 950  1850 -950))
-      (outline (path signal 50  -1850 950  1850 950))
-      (outline (path signal 50  -1850 -950  -1850 950))
-      (outline (path signal 120  -261.252 -710  261.252 -710))
-      (outline (path signal 120  -261.252 710  261.252 710))
-      (outline (path signal 100  1000 -600  -1000 -600))
-      (outline (path signal 100  1000 600  1000 -600))
-      (outline (path signal 100  -1000 600  1000 600))
-      (outline (path signal 100  -1000 -600  -1000 600))
-      (pin RoundRect[T]Pad_1150x1400_250.95_um 2 1025 0)
-      (pin RoundRect[T]Pad_1150x1400_250.95_um 1 -1025 0)
     )
     (image Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical
       (outline (path signal 50  1800 1800  -1800 1800))
@@ -619,8 +638,8 @@
       (pins J4-2 U1-4 R3-2 C1-1)
     )
     (net GND
-      (pins J3-17 J3-8 J3-@1 J3-@2 SHT31-2 SW5-2 SW5-2@1 SW4-2 SW4-2@1 SW3-2 SW3-2@1
-        SW2-2 SW2-2@1 SW1-2 SW1-2@1 J4-1 C15-2 J5-2 C14-2 J1-2 J1-1 U2-2 U2-2@1 R8-2
+      (pins C17-2 C16-2 C15-2 J3-17 J3-8 J2-2 SW5-2 SW5-2@1 SW4-2 SW4-2@1 SW3-2 SW3-2@1
+        SW2-2 SW2-2@1 SW1-2 SW1-2@1 J4-1 C18-2 J5-2 C14-2 J1-2 J1-1 U2-2 U2-2@1 R8-2
         R6-2 D3-1 C13-1 C12-2 C10-2 C9-2 C8-2 C7-2 C6-2 C5-2 C4-2 C3-2 U1-39 U1-28
         U1-18 U1-6 D2-1 D1-1 C2-2)
     )
@@ -649,8 +668,8 @@
       (pins J3-14 J4-3 U2-3 U2-3@1 U1-1)
     )
     (net +3V3
-      (pins J3-16 J3-15 SHT31-1 J4-5 C15-1 J5-1 C14-1 J1-3 U2-1 U2-1@1 L1-1 C3-1 U1-38
-        U1-27 U1-17 U1-5 R5-1 R4-1 R3-1)
+      (pins C17-1 C16-1 C15-1 J3-16 J3-15 J2-1 J4-5 C18-1 J5-1 C14-1 J1-3 U2-1 U2-1@1
+        L1-1 C3-1 U1-38 U1-27 U1-17 U1-5 R5-1 R4-1 R3-1)
     )
     (net /RX
       (pins J1-4 U1-9)
@@ -659,10 +678,10 @@
       (pins J1-5 U1-10)
     )
     (net /SDA
-      (pins SHT31-4 U1-20 R5-2)
+      (pins J2-4 U1-20 R5-2)
     )
     (net /SCL
-      (pins SHT31-3 U1-19 R4-2)
+      (pins J2-3 U1-19 R4-2)
     )
     (net /BUSY
       (pins J3-9 U1-12)
