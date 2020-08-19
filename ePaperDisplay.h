@@ -223,6 +223,8 @@ public:
 
       display.display();
 
+      display.hibernate();
+
       current_screen = Screen::SCREEN_TEMPERATURE;
       displayModeHasChanged(false);
       last_temperature = temperature;
