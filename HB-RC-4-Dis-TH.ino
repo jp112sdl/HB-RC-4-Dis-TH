@@ -23,10 +23,10 @@
 #include <sensors/Sht31.h>
 
 #define CC1101_CS_PIN       10 // PB4
-#define BTN01_PIN           A7 // PA2
-#define BTN02_PIN           A6 // PA4
-#define BTN03_PIN           A5 // PA6
-#define BTN04_PIN           A4 // PA5
+#define BTN01_PIN           26 // PC4
+#define BTN02_PIN           27 // PC5
+#define BTN03_PIN           28 // PC6
+#define BTN04_PIN           29 // PC7
 
 #ifdef LCDDISPLAY_H_
 #define CC1101_GDO0_PIN     2 // PB2 //2 // PD2
@@ -34,10 +34,10 @@
 #define LED_PIN_1           4 // PD8 // 4 // PB0
 #define LED_PIN_2           4 // PB0 // 4 // PB0
 #else
-#define CC1101_GDO0_PIN     6 // PB2 //2 // PD2
-#define CONFIG_BUTTON_PIN   2 // PD2 // 8 // PD5
-#define LED_PIN_1           4 // PD8 // 4 // PB0
-#define LED_PIN_2           8 // PB0 // 4 // PB0
+#define CC1101_GDO0_PIN     6 // PB2
+#define CONFIG_BUTTON_PIN   8 // PD5
+#define LED_PIN_1           5 // PB1
+#define LED_PIN_2           4 // PB0
 #endif
 
 #define BATTERY_CRITICAL    22

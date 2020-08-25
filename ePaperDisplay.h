@@ -16,7 +16,7 @@
 #define GxRST_PIN      9 // PC6
 #define GxBUSY_PIN     3 // PC7
 #define GxDC_PIN      30 // PC5
-#define GxCS_PIN      31 // PC4
+#define GxCS_PIN       7 // PB3
 
 #define MAX_DISPLAY_BUFFER_SIZE 5000
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
