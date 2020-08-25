@@ -124,6 +124,8 @@ public:
       static uint8_t last_humidity = 0;
       static uint8_t last_battpct = 0;
 
+      bool update = false;
+
       //draw main frame on first call
       if (current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
         display.fillRect(0, 0, display.width(), display.height(), WHITE);
@@ -137,6 +139,8 @@ public:
 
         display.drawRect(display.width()/2-14, display.height()-14, 20, 12, BLACK);
         display.fillRect(display.width()/2-14+20, display.height()-12, 4, 8, BLACK);
+
+        update = true;
       }
 
       if (this->temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
@@ -181,6 +185,8 @@ public:
           u8g2Fonts.print(".");
           u8g2Fonts.print(t_dec);
         }
+
+        update = true;
       }
 
       if (defaultdisplaymode == DDM_TH && (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true)) {
@@ -199,6 +205,8 @@ public:
         u8g2Fonts.setCursor((display.width() / 2) + ((h_width / 2) / 2), display.height() - 24);
         u8g2Fonts.setFont(FONT_HUMIDITY_UNIT);
         u8g2Fonts.print(h_unit);
+
+        update = true;
       }
 
       uint8_t max = 30 - battery_low;
@@ -209,9 +217,12 @@ public:
         display.fillRect(display.width()/2-14 + 3 , display.height()-12, 4, 8, battpct > 40 ? BLACK: WHITE);
         display.fillRect(display.width()/2-14 + 3 + 4 + 1 , display.height()-12, 4, 8, battpct > 60 ? BLACK : WHITE);
         display.fillRect(display.width()/2-14 + 3 + 4 + 1 + 4 + 1 , display.height()-12, 4, 8, battpct > 80 ? BLACK : WHITE);
+
+        update = true;
       }
 
-      display.refresh();
+      if (update == true)
+        display.refresh();
 
       current_screen = Screen::SCREEN_TEMPERATURE;
       displayModeHasChanged(false);
@@ -306,7 +317,7 @@ public:
     screen = Screen::SCREEN_TEMPERATURE;
   }
 
-  void showInitScreen(char*serial) {
+  void showInitScreen(char*serial, bool isPaired) {
     screen = SCREEN_KEYLABELS;
 
     const char * asksinpp     PROGMEM = "AskSin++";
@@ -314,6 +325,7 @@ public:
     const char * compiledDate PROGMEM = __DATE__ ;
     const char * compiledTime PROGMEM = __TIME__;
     const char * ser                  = (char*)serial;
+    const char * nocentral    PROGMEM = "- no central -";
 
     u8g2Fonts.setFont(FONT_INITSCREEN_BOLD);
     u8g2Fonts.setCursor(centerPosition(asksinpp), 14);
@@ -327,6 +339,12 @@ public:
     u8g2Fonts.print(compiledDate);
     u8g2Fonts.setCursor(centerPosition(compiledTime), 88);
     u8g2Fonts.print(compiledTime);
+
+    if (isPaired == false) {
+      u8g2Fonts.setFont(u8g2_font_helvB14_tr);
+      u8g2Fonts.setCursor(centerPosition(nocentral), 110);
+      u8g2Fonts.print(nocentral);
+    }
 
     u8g2Fonts.setFont(FONT_INITSCREEN_BOLD);
     u8g2Fonts.setCursor(centerPosition((char*)serial), display.height()-4);

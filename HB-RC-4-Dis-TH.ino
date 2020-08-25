@@ -5,6 +5,7 @@
 //- -----------------------------------------------------------------------------------------------------------------------
 
 // use Arduino IDE Board Setting: BOBUINO Layout
+
 #define SENSOR_ONLY
 #define DEVICE_CHANNEL_COUNT 4
 
@@ -23,24 +24,16 @@
 #include <sensors/Sht31.h>
 
 #define CC1101_CS_PIN       10 // PB4
+#define CC1101_GDO0_PIN      2 // PD2
 #define BTN01_PIN           26 // PC4
 #define BTN02_PIN           27 // PC5
 #define BTN03_PIN           28 // PC6
 #define BTN04_PIN           29 // PC7
+#define CONFIG_BUTTON_PIN    8 // PD5
+#define LED_PIN_1            5 // PB1
+#define LED_PIN_2            4 // PB0
 
-#ifdef LCDDISPLAY_H_
-#define CC1101_GDO0_PIN     2 // PB2 //2 // PD2
-#define CONFIG_BUTTON_PIN   8 // PD2 // 8 // PD5
-#define LED_PIN_1           4 // PD8 // 4 // PB0
-#define LED_PIN_2           4 // PB0 // 4 // PB0
-#else
-#define CC1101_GDO0_PIN     6 // PB2
-#define CONFIG_BUTTON_PIN   8 // PD5
-#define LED_PIN_1           5 // PB1
-#define LED_PIN_2           4 // PB0
-#endif
-
-#define BATTERY_CRITICAL    22
+#define BATTERY_CRITICAL    19 // initial value
 
 #define TEXT_LENGTH               10
 #define PEERS_PER_CHANNEL          8
@@ -58,7 +51,7 @@ const struct DeviceInfo PROGMEM devinfo = {
 
 typedef LibSPI<CC1101_CS_PIN> SPIType;
 typedef Radio<SPIType, CC1101_GDO0_PIN> RadioType;
-typedef StatusLed<LED_PIN_1> LedType;
+typedef DualStatusLed<LED_PIN_1, LED_PIN_2> LedType;
 typedef AskSin<LedType, IrqInternalBatt, RadioType> Hal;
 Hal hal;
 
@@ -215,18 +208,23 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
     }
 
     virtual void trigger (__attribute__ ((unused)) AlarmClock& clock) {
-      uint8_t msgcnt = device().nextcount();
+
       // reactivate for next measure
       uint16_t updCycle = max(10,this->getList1().sendIntervall());
       tick = seconds2ticks(updCycle);
       clock.add(*this);
+
       measure();
-      Display.setWeatherValues(temp, humidity, device().battery().current(), device().getList0().lowBatLimit());
-      if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp();
-      msg.init(msgcnt, temp, humidity, device().battery().low(), device().battery().current());
+
+      //send message
+      msg.init(device().nextcount(), temp, humidity, device().battery().low(), device().battery().current());
       device().getList0().ledMode(false);
       device().broadcastEvent(msg);
       device().getList0().ledMode(true);
+
+      //update display
+      Display.setWeatherValues(temp, humidity, device().battery().current(), device().getList0().lowBatLimit());
+      if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp();
     }
 
     void setup(Device<Hal, HBList0>* dev, uint8_t number, uint16_t addr) {
@@ -277,7 +275,10 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
       }
 
       uint8_t lowbat = getList0().lowBatLimit();
-      if( lowbat > 0 ) battery().low(lowbat);
+      if( lowbat > 0 ) {
+        battery().low(lowbat);
+        battery().critical(lowbat - 2); // set critical bat value to "low bat" - 0.2V
+      }
       //DPRINT(F("List0 LOWBAT               : ")); DDECLN(this->getList0().lowBatLimit());
     }
 };
@@ -321,7 +322,7 @@ void setup() {
   uint8_t serial[11];
   sdev.getDeviceSerial(serial);
   serial[10] = 0;
-  Display.showInitScreen((char*)serial);
+  Display.showInitScreen((char*)serial, sdev.getMasterID() > 0);
 
   sdev.init(hal);
 
