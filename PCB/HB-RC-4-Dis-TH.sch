@@ -18,7 +18,7 @@ L MCU_Microchip_ATmega:ATmega644PA-AU U1
 U 1 1 5F2D0377
 P 7850 3550
 F 0 "U1" H 7790 2210 50  0000 C CNN
-F 1 "ATmega644PA-AU" H 7780 2100 50  0000 C CNN
+F 1 "ATmega1284P-AU" H 7780 2100 50  0000 C CNN
 F 2 "Package_QFP:TQFP-44_10x10mm_P0.8mm" H 7850 3550 50  0001 C CIN
 F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-8272-8-bit-AVR-microcontroller-ATmega164A_PA-324A_PA-644A_PA-1284_P_datasheet.pdf" H 7850 3550 50  0001 C CNN
 	1    7850 3550
