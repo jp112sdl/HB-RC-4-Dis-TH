@@ -46,7 +46,7 @@ typedef struct {
   String HeaderText  = "";
   String MainText1   = "";
   String MainText2   = "";
-  bool   showHeader = true;
+  bool   showHeader  = true;
 } DisplayRCConfig;
 DisplayRCConfig DisplayFields[DEVICE_CHANNEL_COUNT];
 
@@ -62,11 +62,12 @@ private:
   bool displaymodehaschanged;
   uint16_t battery;
   uint16_t battery_low;
+  bool   temphalfdegree;
 private:
   uint16_t centerPosition(const char * text) { return centerPosition(display.width(), text); }
   uint16_t centerPosition(uint8_t width, const char * text) { return (width / 2) - (u8g2Fonts.getUTF8Width(text) / 2); }
 public:
-  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery(0), battery_low(0) {}
+  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery(0), battery_low(0), temphalfdegree(false) {}
   virtual ~DisplayType () {}
   void cancel (AlarmClock& clock) {
     clock.cancel(*this);
@@ -113,8 +114,20 @@ public:
     return defaultdisplaymode;
   }
 
+  void tempHalfDegree(bool b){
+    temphalfdegree = b;
+  }
+
+  bool tempHalfDegree() {
+    return temphalfdegree;
+  }
+
   void setWeatherValues(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
-    temperature = t;
+    if (temphalfdegree == true) {
+      temperature = t > 0 ? (t+2)/5*5 : (t-2)/5*5 ;
+    } else {
+      temperature = t;
+    }
     humidity = h;
     battery = b;
     battery_low = bl;
@@ -122,6 +135,11 @@ public:
 
   uint8_t currentScreen() {
     return current_screen;
+  }
+
+  void showTemp(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
+    setWeatherValues(t, h, b, bl);
+    showTemp();
   }
 
   void showTemp() {

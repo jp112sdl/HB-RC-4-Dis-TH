@@ -65,11 +65,15 @@ class HBList0 : public RegList0<Reg0> {
     uint8_t defaultDisplayMode () const { return this->readRegister(0x03,0); }
     bool defaultDisplayMode (uint8_t value) const { return this->writeRegister(0x03,value); }
 
+    bool displayHalfDegree () const { return this->readRegister(0x03,3); }
+    bool displayHalfDegree (uint8_t value) const { return this->writeRegister(0x03,value); }
+
     void defaults () {
       clear();
       lowBatLimit(24);
       backOnTime(10);
       defaultDisplayMode(0);
+      displayHalfDegree(false);
       ledMode(1);
     }
 };
@@ -223,8 +227,7 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
       device().getList0().ledMode(true);
 
       //update display
-      Display.setWeatherValues(temp, humidity, device().battery().current(), device().getList0().lowBatLimit());
-      if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp();
+      if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp(temp, humidity, device().battery().current(), device().getList0().lowBatLimit());
     }
 
     void setup(Device<Hal, HBList0>* dev, uint8_t number, uint16_t addr) {
@@ -273,6 +276,8 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
           Display.set(seconds2ticks(8), sysclock);
         }
       }
+
+      Display.tempHalfDegree(getList0().displayHalfDegree());
 
       uint8_t lowbat = getList0().lowBatLimit();
       if( lowbat > 0 ) {
