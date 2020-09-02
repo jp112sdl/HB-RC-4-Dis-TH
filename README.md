@@ -47,8 +47,23 @@ Tasterbeschriftungen:<br>
 **Einstellungen -> Geräte**<br/>
 <img src="Images/CCU_Einstellungen.png" width=500 />
 
-### Hardware:
-
-- ATmega **1284P**
-- GoodDisplay ePaper 1,54" [**GDEW0154M09**](https://de.aliexpress.com/item/4000993819257.html)
-- SHT31 Sensor (kann aber auch was anderes sein... SHT10, BME280 etc.pp.)
+### Zutaten
+| Anzahl | Bezeichnung | Bauform | Artikelnummer (Reichelt)|
+|--------|-------------|----------|---------------|
+| 6 | 100nF	| 0805	| X7R-G0805 100N
+|11	| 1µF/25V	| 0805	| KEM X5R0805 1,0U
+|1	| 100µ/10V	| 3528	| TAJ 3528 100/10
+|1	| LED rot	| 0805	| OSO LHR974
+|1	| LED grün	| 0805	| OSO LGR971
+|3	| MBR0530	| SOD-123	| MBR0530T1G ONS 
+|1	| 100µH	| 3012	| L-1616FPS 100µ
+|1	| IRLML 6346 | SOT-23	| IRLML 6346
+|1	| ATMEGA 1284P-AU	| TQFP-44	| ATMEGA 1284P-AU
+|2	| 330	| 0805	| RND 0805 1 330
+|3	| 10k	| 0805	| RND 0805 1 10K
+|1	| 100k	| 0805	| RND 0805 1 100K
+|2	| 1,0	| 0805	| SMD-0805 1,00
+|5	| Taster	| THT	| RND 210-00193
+|1	| ZIF-Sockel 24pol.	| ZIF SMD	| EA WF050-24S
+|1 | GoodDisplay ePaper 1,54" GDEW0154M09 ||https://de.aliexpress.com/item/4000993819257.html|
+|1 | SHT31 Sensor ||https://de.aliexpress.com/item/32850554676.html|
