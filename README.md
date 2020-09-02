@@ -67,3 +67,5 @@ Tasterbeschriftungen:<br>
 |1	| ZIF-Sockel 24pol.	| ZIF SMD	| EA WF050-24S
 |1 | GoodDisplay ePaper 1,54" GDEW0154M09 ||https://de.aliexpress.com/item/4000993819257.html|
 |1 | SHT31 Sensor ||https://de.aliexpress.com/item/32850554676.html|
+
+_Da es bei Reichelt keinen 0,47 Ohm Widerstand in 0805 gibt, verwende ich 2x 1,0 Ohm, die ich übereinander verlöte_
