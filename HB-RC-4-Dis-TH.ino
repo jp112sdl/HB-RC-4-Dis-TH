@@ -57,16 +57,17 @@ Hal hal;
 
 DisplayType Display;
 
-DEFREGISTER(Reg0, MASTERID_REGS, DREG_LOWBATLIMIT, DREG_LEDMODE, DREG_BACKONTIME, 0x03)
+#define DREG_DISPLAYMODE 0x03
+DEFREGISTER(Reg0, MASTERID_REGS, DREG_LOWBATLIMIT, DREG_LEDMODE, DREG_BACKONTIME, DREG_DISPLAYMODE)
 class HBList0 : public RegList0<Reg0> {
   public:
     HBList0(uint16_t addr) : RegList0<Reg0>(addr) {}
 
-    uint8_t defaultDisplayMode () const { return this->readRegister(0x03,0); }
-    bool defaultDisplayMode (uint8_t value) const { return this->writeRegister(0x03,value); }
+    bool defaultDisplayMode (uint8_t value) const { return this->writeRegister(DREG_DISPLAYMODE,7,0,value); }
+    uint8_t defaultDisplayMode () const { return this->readRegister(DREG_DISPLAYMODE,7,0,0); }
 
-    bool displayHalfDegree () const { return this->readRegister(0x03,3); }
-    bool displayHalfDegree (uint8_t value) const { return this->writeRegister(0x03,value); }
+    bool displayHalfDegree (uint8_t value) const { return this->writeRegister(DREG_DISPLAYMODE,1,3,value); }
+    bool displayHalfDegree () const { return this->readRegister(DREG_DISPLAYMODE,1,3,0); }
 
     void defaults () {
       clear();
@@ -98,7 +99,6 @@ class RCEPList1 : public RegList1<RCEPReg1> {
 
     bool mainText2 (uint8_t value[TEXT_LENGTH]) const { for (int i = 0; i < TEXT_LENGTH; i++) { this->writeRegister(0x56 + i, value[i] & 0xff); } return true; }
     String mainText2 () const { String a = ""; for (int i = 0; i < TEXT_LENGTH; i++) { byte b = this->readRegister(0x56 + i, 0x20); if (b == 0x00) b = 0x20; a += char(b); } return a; }
-
 
     void defaults () {
       clear();
@@ -227,7 +227,8 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
       device().getList0().ledMode(true);
 
       //update display
-      if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp(temp, humidity, device().battery().current(), device().getList0().lowBatLimit());
+      Display.setValues(temp, humidity, device().battery().current(), device().getList0().lowBatLimit());
+      if (Display.currentScreen() == SCREEN_TEMPERATURE) Display.showTemp();
     }
 
     void setup(Device<Hal, HBList0>* dev, uint8_t number, uint16_t addr) {
@@ -270,7 +271,7 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
 
       if (getList0().defaultDisplayMode() != Display.defaultDisplayMode()) {
         uint8_t ddm = getList0().defaultDisplayMode();
-        //DPRINT(F("List0 DEFAULT DISPLAYMODE  : ")); DDECLN(this->getList0().defaultDisplayMode());
+        DPRINT(F("List0 DEFAULT DISPLAYMODE  : ")); DDECLN(this->getList0().defaultDisplayMode());
         Display.defaultDisplayMode(ddm);
         if (Display.currentScreen() == SCREEN_TEMPERATURE) {
           Display.set(seconds2ticks(8), sysclock);
@@ -278,6 +279,7 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
       }
 
       Display.tempHalfDegree(getList0().displayHalfDegree());
+      DPRINT(F("List0 SHOW TEMP HALFDEGREE : ")); DDECLN(getList0().displayHalfDegree());
 
       uint8_t lowbat = getList0().lowBatLimit();
       if( lowbat > 0 ) {
@@ -350,6 +352,7 @@ void loop() {
   bool poll = sdev.pollRadio();
   if ( worked == false && poll == false ) {
     if (hal.battery.critical()) {
+      Display.showBatteryEmpty();
       hal.activity.sleepForever(hal);
     }
     hal.activity.savePower<Sleep<>>(hal);

@@ -22,7 +22,7 @@
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
 GxEPD2_BW<GxEPD2_154_M09, MAX_HEIGHT(GxEPD2_154_M09)> display(GxEPD2_154_M09(/*CS=10*/ GxCS_PIN, /*DC=*/ GxDC_PIN, /*RST=*/ GxRST_PIN, /*BUSY=*/ GxBUSY_PIN)); // GDEW0154M09 200x200
 U8G2_FONTS_GFX u8g2Fonts(display);
-typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE } Screen;
+typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE, SCREEN_EMPTYBATTERY } Screen;
 
 #define BLACK       GxEPD_BLACK
 #define WHITE       GxEPD_WHITE
@@ -69,9 +69,7 @@ private:
 public:
   DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery(0), battery_low(0), temphalfdegree(false) {}
   virtual ~DisplayType () {}
-  void cancel (AlarmClock& clock) {
-    clock.cancel(*this);
-  }
+
   void set (uint32_t t,AlarmClock& clock) {
     clock.cancel(*this);
     Alarm::set(t);
@@ -122,7 +120,7 @@ public:
     return temphalfdegree;
   }
 
-  void setWeatherValues(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
+  void setValues(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
     if (temphalfdegree == true) {
       temperature = t > 0 ? (t+2)/5*5 : (t-2)/5*5 ;
     } else {
@@ -135,11 +133,6 @@ public:
 
   uint8_t currentScreen() {
     return current_screen;
-  }
-
-  void showTemp(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
-    setWeatherValues(t, h, b, bl);
-    showTemp();
   }
 
   void showTemp() {
@@ -351,7 +344,7 @@ public:
     const char * compiledDate PROGMEM = __DATE__ ;
     const char * compiledTime PROGMEM = __TIME__;
     const char * ser                  = (char*)serial;
-    const char * nocentral    PROGMEM = "- no central -";
+    const char * nocentral    PROGMEM = "- Keine Zentrale -";
 
     display.fillScreen(GxEPD_WHITE);
     u8g2Fonts.setFont(FONT_INITSCREEN_BOLD);
@@ -380,6 +373,30 @@ public:
     display.display();
 
     set(seconds2ticks(1), sysclock);
+  }
+
+  void showBatteryEmpty() {
+    current_screen = Screen::SCREEN_EMPTYBATTERY;
+    sysclock.cancel(*this);
+    display.fillScreen(GxEPD_WHITE);
+
+    const uint8_t thickness = 5;
+    const uint8_t startX = 15;
+    const uint8_t wdth = display.width() - 45;
+    const uint8_t vCenter = display.height() / 2;
+
+    display.fillRect(startX,  vCenter - 30, wdth, thickness, BLACK);
+    display.fillRect(startX,  vCenter + 30, wdth, thickness, BLACK);
+    display.fillRect(startX, vCenter - 30, thickness, 60, BLACK);
+    display.fillRect(wdth - thickness + startX, vCenter - 30, thickness, 60, BLACK);
+    display.fillRect(wdth + startX, vCenter - 10, 3 * thickness, 30 , BLACK);
+
+    u8g2Fonts.setFont(FONT_TEMPERATURE_UNIT);
+    const char * emptybat = "EMPTY";
+    u8g2Fonts.setCursor(centerPosition(emptybat)-8, display.height() / 2 + 16);
+    u8g2Fonts.print(emptybat);
+
+    display.display();
   }
 
   void init() {

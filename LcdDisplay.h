@@ -17,7 +17,7 @@
 
 Adafruit_SharpMem display(&SPI, SHARP_SS, 128, 128);
 U8G2_FONTS_GFX u8g2Fonts(display);
-typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE } Screen;
+typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE, SCREEN_EMPTYBATTERY } Screen;
 
 #define BLACK       0
 #define WHITE       1
@@ -114,7 +114,7 @@ public:
     return temphalfdegree;
   }
 
-  void setWeatherValues(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
+  void setValues(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
     if (temphalfdegree == true) {
       temperature = t > 0 ? (t+2)/5*5 : (t-2)/5*5 ;
     } else {
@@ -127,11 +127,6 @@ public:
 
   uint8_t currentScreen() {
     return current_screen;
-  }
-
-  void showTemp(int16_t t, uint8_t h, uint16_t b, uint16_t bl) {
-    setWeatherValues(t, h, b, bl);
-    showTemp();
   }
 
   void showTemp() {
@@ -343,7 +338,7 @@ public:
     const char * compiledDate PROGMEM = __DATE__ ;
     const char * compiledTime PROGMEM = __TIME__;
     const char * ser                  = (char*)serial;
-    const char * nocentral    PROGMEM = "- no central -";
+    const char * nocentral    PROGMEM = "- Keine Zentrale -";
 
     u8g2Fonts.setFont(FONT_INITSCREEN_BOLD);
     u8g2Fonts.setCursor(centerPosition(asksinpp), 14);
@@ -371,6 +366,14 @@ public:
     display.refresh();
 
     set(seconds2ticks(2), sysclock);
+  }
+
+  void showBatteryEmpty() {
+    current_screen = Screen::SCREEN_EMPTYBATTERY;
+    sysclock.cancel(*this);
+    display.clearDisplay();
+    //TODO: draw empty battery symbol
+    display.refresh();
   }
 
   void init() {
