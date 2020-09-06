@@ -223,7 +223,7 @@ public:
       }
 
       uint8_t max = 30 - battery_low;
-      uint8_t diff = battery - battery_low;
+      uint8_t diff = battery_low > battery ? 0 : battery - battery_low;
       uint8_t battpct = (100 * diff) / max;
 
       if (battpct != last_battpct || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {

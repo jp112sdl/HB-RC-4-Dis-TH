@@ -284,9 +284,9 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
       uint8_t lowbat = getList0().lowBatLimit();
       if( lowbat > 0 ) {
         battery().low(lowbat);
-        battery().critical(lowbat - 2); // set critical bat value to "low bat" - 0.2V
+        battery().critical(lowbat - 1); // set critical bat value to "low bat" - 0.1V
       }
-      //DPRINT(F("List0 LOWBAT               : ")); DDECLN(this->getList0().lowBatLimit());
+      DPRINT(F("List0 LOWBAT               : ")); DDECLN(this->getList0().lowBatLimit());
     }
 };
 

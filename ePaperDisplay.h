@@ -144,7 +144,7 @@ public:
       static uint8_t last_battpct = 0;
 
       uint8_t max = 30 - battery_low;
-      uint8_t diff = battery - battery_low;
+      uint8_t diff = battery_low > battery ? 0 : battery - battery_low;
       uint8_t battpct = (100 * diff) / max;
 
       bool update = false;
