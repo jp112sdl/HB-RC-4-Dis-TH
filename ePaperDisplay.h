@@ -12,6 +12,7 @@
 #include <GxEPD2_BW.h>
 #include "U8G2_FONTS_GFX.h"
 #include <AskSinPP.h>
+#include "ePaperIcons.h"
 
 #define GxRST_PIN      9 // PC6
 #define GxBUSY_PIN     3 // PC7
@@ -143,7 +144,7 @@ public:
       static uint8_t last_humidity = 0;
       static uint8_t last_battpct = 0;
 
-      uint8_t max = 30 - battery_low;
+      uint8_t max = V_BATT_MAX - battery_low;
       uint8_t diff = battery_low > battery ? 0 : battery - battery_low;
       uint8_t battpct = (100 * diff) / max;
 
@@ -375,28 +376,27 @@ public:
     set(seconds2ticks(1), sysclock);
   }
 
-  void showBatteryEmpty() {
+  enum {BS_EMPTY, BS_FULL, BS_CHARGING};
+
+  void showBatterySymbol(uint8_t symbol) {
     current_screen = Screen::SCREEN_EMPTYBATTERY;
     sysclock.cancel(*this);
-    display.fillScreen(GxEPD_WHITE);
 
-    const uint8_t thickness = 5;
-    const uint8_t startX = 15;
-    const uint8_t wdth = display.width() - 45;
-    const uint8_t vCenter = display.height() / 2;
+    display.firstPage();
+    do {
+      switch (symbol) {
+        case BS_EMPTY:
+          display.drawBitmap(10, 10, emptyBattery,180, 180,BLACK);
+          break;
+        case BS_FULL:
+          display.drawBitmap(10, 10, fullBattery,180, 180,BLACK);
+          break;
+        case BS_CHARGING:
+          display.drawBitmap(10, 10, chargingBattery,180, 180,BLACK);
+          break;
+      }
+    } while (display.nextPage());
 
-    display.fillRect(startX,  vCenter - 30, wdth, thickness, BLACK);
-    display.fillRect(startX,  vCenter + 30, wdth, thickness, BLACK);
-    display.fillRect(startX, vCenter - 30, thickness, 60, BLACK);
-    display.fillRect(wdth - thickness + startX, vCenter - 30, thickness, 60, BLACK);
-    display.fillRect(wdth + startX, vCenter - 10, 3 * thickness, 30 , BLACK);
-
-    u8g2Fonts.setFont(FONT_TEMPERATURE_UNIT);
-    const char * emptybat = "EMPTY";
-    u8g2Fonts.setCursor(centerPosition(emptybat)-8, display.height() / 2 + 16);
-    u8g2Fonts.print(emptybat);
-
-    display.display();
   }
 
   void init() {
@@ -407,7 +407,5 @@ public:
     display.setRotation(1);
   }
 };
-
-
 
 #endif /* EPAPERDISPLAY_H_ */

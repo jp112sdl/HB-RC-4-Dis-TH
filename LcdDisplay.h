@@ -222,7 +222,7 @@ public:
         update = true;
       }
 
-      uint8_t max = 30 - battery_low;
+      uint8_t max = V_BATT_MAX - battery_low;
       uint8_t diff = battery_low > battery ? 0 : battery - battery_low;
       uint8_t battpct = (100 * diff) / max;
 
@@ -368,7 +368,9 @@ public:
     set(seconds2ticks(2), sysclock);
   }
 
-  void showBatteryEmpty() {
+  enum {BS_EMPTY, BS_FULL, BS_CHARGING};
+
+  void showBatterySymbol(uint8_t symbol) {
     current_screen = Screen::SCREEN_EMPTYBATTERY;
     sysclock.cancel(*this);
     display.clearDisplay();

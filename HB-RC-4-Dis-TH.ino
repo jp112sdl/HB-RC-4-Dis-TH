@@ -7,6 +7,16 @@
 // use Arduino IDE Board Setting: BOBUINO Layout
 
 #define SENSOR_ONLY
+
+#define USE_LIPO
+#define BATTERY_CRITICAL    19 // initial value
+#ifdef USE_LIPO
+#define V_BATT_MAX          37
+#define V_BATT_LOW          27
+#else
+#define V_BATT_MAX          30
+#endif
+
 #define DEVICE_CHANNEL_COUNT 4
 
 #define EI_NOTEXTERNAL
@@ -32,8 +42,6 @@
 #define CONFIG_BUTTON_PIN    8 // PD5
 #define LED_PIN_1            5 // PB1
 #define LED_PIN_2            4 // PB0
-
-#define BATTERY_CRITICAL    19 // initial value
 
 #define TEXT_LENGTH               10
 #define PEERS_PER_CHANNEL          8
@@ -281,7 +289,11 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
       Display.tempHalfDegree(getList0().displayHalfDegree());
       DPRINT(F("List0 SHOW TEMP HALFDEGREE : ")); DDECLN(getList0().displayHalfDegree());
 
+#ifdef USE_LIPO
+      uint8_t lowbat = V_BATT_LOW;
+#else
       uint8_t lowbat = getList0().lowBatLimit();
+#endif
       if( lowbat > 0 ) {
         battery().low(lowbat);
         battery().critical(lowbat - 1); // set critical bat value to "low bat" - 0.1V
@@ -346,13 +358,12 @@ void setup() {
   sdev.initDone();
 }
 
-
 void loop() {
   bool worked = hal.runready();
   bool poll = sdev.pollRadio();
   if ( worked == false && poll == false ) {
     if (hal.battery.critical()) {
-      Display.showBatteryEmpty();
+      Display.showBatterySymbol(DisplayType::BS_EMPTY);
       hal.activity.sleepForever(hal);
     }
     hal.activity.savePower<Sleep<>>(hal);
