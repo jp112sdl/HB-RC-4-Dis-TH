@@ -63,6 +63,7 @@ Tasterbeschriftungen:<br>
 |1	|1	| ATMEGA 1284P-AU	| TQFP-44	| ATMEGA 1284P-AU
 |1  |0  | MCP 1703T-3302E | SOT-23 | MCP 1703T-3302E
 |1  |0  | MCP 73831T-2ACI | SOT-23-5 | MCP 73831T-2ACI
+|1  |0	| PC357 | SO-4 | PC 357NJ0000F |
 |1	|0	| 240	| 0805	| RND 0805 1 240
 |2	|2	| 330	| 0805	| RND 0805 1 330
 |1	|0	| 680	| 0805	| RND 0805 1 680
@@ -73,7 +74,6 @@ Tasterbeschriftungen:<br>
 |2	|2	| 1,0	| 0805	| SMD-0805 1,00
 |5	|5	| Taster	| THT	| RND 210-00193
 |1	|1	| ZIF-Sockel 24pol.	| ZIF SMD	| EA WF050-24S
-|1  |0	| PC357 | SMD-4 | PC 357NJ0000F |
 |1 |1	| GoodDisplay ePaper 1,54" GDEW0154M09 ||https://de.aliexpress.com/item/4000993819257.html|
 |1 |1 | SHT31 Sensor ||https://de.aliexpress.com/item/32850554676.html|
 
