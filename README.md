@@ -50,21 +50,28 @@ Tasterbeschriftungen:<br>
 ### Zutaten
 | Anzahl | Bezeichnung | Bauform | Artikelnummer (Reichelt)|
 |--------|-------------|----------|---------------|
-| 6 | 100nF	| 0805	| X7R-G0805 100N
+|6  | 100nF	| 0805	| X7R-G0805 100N
 |11	| 1µF/25V	| 0805	| KEM X5R0805 1,0U
 |1	| 100µ/10V	| 3528	| TAJ 3528 100/10
+|2	| 10µ/10V	| 0805	|KEM X5R0805 10U
 |1	| LED rot	| 0805	| OSO LHR974
 |1	| LED grün	| 0805	| OSO LGR971
+|1	| LED weiß	| 0805	| SLO SMD-W0805-0
 |3	| MBR0530	| SOD-123	| MBR0530T1G ONS 
 |1	| 100µH	| 3012	| L-1616FPS 100µ
 |1	| IRLML 6346 | SOT-23	| IRLML 6346
 |1	| ATMEGA 1284P-AU	| TQFP-44	| ATMEGA 1284P-AU
+|1	| 240	| 0805	| RND 0805 1 240
 |2	| 330	| 0805	| RND 0805 1 330
+|1	| 680	| 0805	| RND 0805 1 680
+|1	| 2k2	| 0805	| RND 0805 1 2,2K
 |3	| 10k	| 0805	| RND 0805 1 10K
-|1	| 100k	| 0805	| RND 0805 1 100K
+|3	| 100k	| 0805	| RND 0805 1 100K
+|1	| 470k	| 0805	| RND 0805 1 470K
 |2	| 1,0	| 0805	| SMD-0805 1,00
 |5	| Taster	| THT	| RND 210-00193
 |1	| ZIF-Sockel 24pol.	| ZIF SMD	| EA WF050-24S
+|1  | PC357 | SMD-4 | PC 357NJ0000F |
 |1 | GoodDisplay ePaper 1,54" GDEW0154M09 ||https://de.aliexpress.com/item/4000993819257.html|
 |1 | SHT31 Sensor ||https://de.aliexpress.com/item/32850554676.html|
 
