@@ -199,7 +199,6 @@ Wire Wire Line
 	8700 2850 8450 2850
 NoConn ~ 8450 1950
 NoConn ~ 8450 2050
-NoConn ~ 8450 2150
 NoConn ~ 8450 2250
 NoConn ~ 8450 2350
 NoConn ~ 8450 2450
@@ -296,11 +295,11 @@ TX
 Text Label 8450 4550 0    50   ~ 0
 RX
 $Comp
-L Connector_Generic:Conn_01x04 J2
+L Connector_Generic:Conn_01x04 SHT31
 U 1 1 5F30CE44
 P 1380 1250
-F 0 "J2" H 1460 1242 50  0000 L CNN
-F 1 "SHT31" H 1460 1151 50  0000 L CNN
+F 0 "SHT31" H 1460 1242 50  0000 L CNN
+F 1 "SHT31" H 1460 1151 50  0001 L CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" H 1380 1250 50  0001 C CNN
 F 3 "~" H 1380 1250 50  0001 C CNN
 	1    1380 1250
@@ -475,22 +474,22 @@ DTR
 Wire Wire Line
 	2040 1460 2230 1460
 $Comp
-L Connector_Generic:Conn_01x06 J1
+L Connector_Generic:Conn_01x06 FTDI1
 U 1 1 5F3355F4
 P 1840 1360
-F 0 "J1" H 1758 1777 50  0000 C CNN
-F 1 "FTDI" H 1758 1686 50  0000 C CNN
+F 0 "FTDI1" H 1758 1777 50  0000 C CNN
+F 1 "FTDI" H 1758 1686 50  0001 C CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical" H 1840 1360 50  0001 C CNN
 F 3 "~" H 1840 1360 50  0001 C CNN
 	1    1840 1360
 	-1   0    0    1   
 $EndComp
 $Comp
-L Connector_Generic:Conn_01x06 J4
+L Connector_Generic:Conn_01x06 ISP1
 U 1 1 5F3363EF
 P 2840 1350
-F 0 "J4" H 2758 1767 50  0000 C CNN
-F 1 "ISP" H 2758 1676 50  0000 C CNN
+F 0 "ISP1" H 2758 1767 50  0000 C CNN
+F 1 "ISP" H 2758 1676 50  0001 C CNN
 F 2 "additional:PinPads_ISP" H 2840 1350 50  0001 C CNN
 F 3 "~" H 2840 1350 50  0001 C CNN
 	1    2840 1350
@@ -1528,7 +1527,7 @@ F 3 "" H 2240 5750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L MCU_Microchip_ATmega:ATmega644PA-AU U1
+L MCU_Microchip_ATmega:ATmega1284P-AU U1
 U 1 1 5F2D0377
 P 7850 3550
 F 0 "U1" H 7790 2210 50  0000 C CNN
@@ -1540,7 +1539,7 @@ F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-8272-8-bit-AVR-microc
 $EndComp
 Text Label 8450 3850 0    50   ~ 0
 B_ACTIVATION
-Text Label 8450 1850 0    50   ~ 0
+Text Label 8450 2150 0    50   ~ 0
 B_MEASURE
 Text Label 3290 4490 0    50   ~ 0
 B_CHARGING
@@ -1696,4 +1695,5 @@ Wire Wire Line
 Connection ~ 3210 4490
 Wire Wire Line
 	3210 4490 3210 4580
+NoConn ~ 8450 1850
 $EndSCHEMATC
