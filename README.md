@@ -76,5 +76,8 @@ Tasterbeschriftungen:<br>
 |1	|1	| ZIF-Sockel 24pol.	| ZIF SMD	| EA WF050-24S
 |1 |1	| GoodDisplay ePaper 1,54" GDEW0154M09 ||https://de.aliexpress.com/item/4000993819257.html|
 |1 |1 | SHT31 Sensor ||https://de.aliexpress.com/item/32850554676.html|
+|1	|0	| 600mAh LiPo	| THT	| https://www.ebay.de/itm/LiPo-Lithium-Polymer-3-7V-Akku-mit-BMS-PCB-Batterie-Handy-MP3-Tablet-Navi-LiIon/372814314688?ssPageName=STRK%3AMEBIDX%3AIT&var=641708800610 
+|1	|0	| Induktionsladeempfänger	1x1,5cm | THT	| https://de.aliexpress.com/item/4000086798457.html
+|1	|0	| Induktionsladegerät	| THT	| https://de.aliexpress.com/item/4000969719130.html
 
 _Da es bei Reichelt keinen 0,47 Ohm Widerstand in 0805 gibt, verwende ich 2x 1,0 Ohm, die ich übereinander verlöte_
