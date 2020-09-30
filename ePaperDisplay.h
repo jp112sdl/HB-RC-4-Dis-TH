@@ -61,14 +61,14 @@ private:
   uint8_t humidity;
   uint8_t defaultdisplaymode;
   bool displaymodehaschanged;
-  uint16_t battery;
+  uint16_t battery_current;
   uint16_t battery_low;
   bool   temphalfdegree;
 private:
   uint16_t centerPosition(const char * text) { return centerPosition(display.width(), text); }
   uint16_t centerPosition(uint8_t width, const char * text) { return (width / 2) - (u8g2Fonts.getUTF8Width(text) / 2); }
 public:
-  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery(0), battery_low(0), temphalfdegree(false) {}
+  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery_current(0), battery_low(0), temphalfdegree(false) {}
   virtual ~DisplayType () {}
 
   void set (uint32_t t,AlarmClock& clock) {
@@ -87,9 +87,9 @@ public:
       break;
     }
   }
-  void setNextScreen(Screen scr) {
+  void setNextScreen(Screen scr, bool immediate=false) {
     screen = scr;
-    set(millis2ticks(timeout),sysclock);
+    set(millis2ticks(immediate? 5 : timeout),sysclock);
   }
 
   void setScreenKeysTimeout(uint8_t t) {
@@ -128,7 +128,7 @@ public:
       temperature = t;
     }
     humidity = h;
-    battery = b;
+    battery_current = b;
     battery_low = bl;
   }
 
@@ -144,9 +144,10 @@ public:
       static uint8_t last_humidity = 0;
       static uint8_t last_battpct = 0;
 
-      uint8_t max = V_BATT_MAX - battery_low;
-      uint8_t diff = battery_low > battery ? 0 : battery - battery_low;
-      uint8_t battpct = (100 * diff) / max;
+      uint8_t range = V_BATT_MAX - battery_low;
+      if (battery_current > V_BATT_MAX) battery_current = V_BATT_MAX;
+      uint8_t diff = battery_low > battery_current ? 0 : battery_current - battery_low;
+      uint8_t battpct = (100 * diff) / range;
 
       bool update = false;
 
@@ -235,16 +236,18 @@ public:
       }
 
       if (battpct != last_battpct || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
-        display.fillRect(display.width()/2-20 + 3 , display.height()-18, 8, 14, battpct > 40 ? BLACK: WHITE);
-        display.fillRect(display.width()/2-20 + 3 + 8 + 1 , display.height()-18, 8, 14, battpct > 60 ? BLACK : WHITE);
-        display.fillRect(display.width()/2-20 + 3 + 8 + 1 + 8 + 1 , display.height()-18, 8, 14, battpct > 80 ? BLACK : WHITE);
+        display.fillRect(display.width()/2-20 + 3 , display.height()-18, 8, 14, battpct > 20 ? BLACK: WHITE);
+        display.fillRect(display.width()/2-20 + 3 + 8 + 1 , display.height()-18, 8, 14, battpct > 40 ? BLACK : WHITE);
+        display.fillRect(display.width()/2-20 + 3 + 8 + 1 + 8 + 1 , display.height()-18, 8, 14, battpct > 60 ? BLACK : WHITE);
 
         update = true;
       }
 
       if (update == true) {
         display.display();
+#ifndef USE_LIPO
         display.hibernate();
+#endif
       }
 
       current_screen = Screen::SCREEN_TEMPERATURE;
@@ -392,6 +395,7 @@ public:
           display.drawBitmap(10, 10, fullBattery,180, 180,BLACK);
           break;
         case BS_CHARGING:
+          DPRINTLN("show BS_CHARGING icon");
           display.drawBitmap(10, 10, chargingBattery,180, 180,BLACK);
           break;
       }
