@@ -74,6 +74,7 @@ Tasterbeschriftungen:<br>
 |1	|0	| 470k	| 0805	| RND 0805 1 470K
 |2	|2	| 1,0	| 0805	| SMD-0805 1,00
 |5	|5	| Taster	| THT	| RND 210-00193
+|1	|1	| Taster	| SMD	| 
 |1	|1	| ZIF-Sockel 24pol.	| ZIF SMD	| EA WF050-24S
 |1 |1	| GoodDisplay ePaper 1,54" GDEW0154M09 ||https://de.aliexpress.com/item/4000993819257.html|
 |1 |1 | SHT31 Sensor ||https://de.aliexpress.com/item/32850554676.html|
