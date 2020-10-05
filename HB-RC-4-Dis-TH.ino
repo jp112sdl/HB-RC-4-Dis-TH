@@ -7,7 +7,35 @@
 // use Arduino IDE Board Setting: BOBUINO Layout
 
 #define SENSOR_ONLY
+
+#define USE_LIPO
+
+#ifdef USE_LIPO
+
+#define ChargerISR(chan,pin) class __##pin##ISRHandler { \
+  public: \
+  static void isr () { chan.irq(); } \
+     }; \
+  chan.init(pin); \
+  if( digitalPinToInterrupt(pin) == NOT_AN_INTERRUPT ) \
+    enableInterrupt(pin,__##pin##ISRHandler::isr,CHANGE); \
+  else \
+    attachInterrupt(digitalPinToInterrupt(pin),__##pin##ISRHandler::isr,CHANGE);
+
+#define V_BATT_MAX          40
+#define B_CHARGING_PIN      25
+#define BATTERY_MEASUREMENT IrqExternalBatt<A4, 24>
+#define DEVICE_MODEL        {0xf3, 0x2e}
+#define ADDITIONAL_CHANNELS 2
+#else
+#define V_BATT_MAX          30
+#define BATTERY_MEASUREMENT IrqInternalBatt
+#define DEVICE_MODEL        {0xf3, 0x2f}
+#define ADDITIONAL_CHANNELS 1
+#endif
+
 #define DEVICE_CHANNEL_COUNT 4
+#define BATTERY_CRITICAL    19 // initial value
 
 #define EI_NOTEXTERNAL
 #include <EnableInterrupt.h>
@@ -21,6 +49,7 @@
 #include <Register.h>
 #include <MultiChannelDevice.h>
 #include <Remote.h>
+#include <ContactState.h>
 #include <sensors/Sht31.h>
 
 #define CC1101_CS_PIN       10 // PB4
@@ -33,17 +62,15 @@
 #define LED_PIN_1            5 // PB1
 #define LED_PIN_2            4 // PB0
 
-#define BATTERY_CRITICAL    19 // initial value
-
 #define TEXT_LENGTH               10
 #define PEERS_PER_CHANNEL          8
 
 #define SENSOR       Sht31<>
 
 const struct DeviceInfo PROGMEM devinfo = {
-  {0xf3, 0x2f, 0x01},       // Device ID
-  "JPRCDISTH1",             // Device Serial
-  {0xf3, 0x2f},             // Device Model
+  {0xf3, 0x2f, 0x02},       // Device ID
+  "JPRCDISTH2",             // Device Serial
+  DEVICE_MODEL,             // Device Model
   0x10,                     // Firmware Version
   as::DeviceType::Remote,   // Device Type
   {0x00, 0x00}              // Info Bytes
@@ -52,13 +79,13 @@ const struct DeviceInfo PROGMEM devinfo = {
 typedef LibSPI<CC1101_CS_PIN> SPIType;
 typedef Radio<SPIType, CC1101_GDO0_PIN> RadioType;
 typedef DualStatusLed<LED_PIN_1, LED_PIN_2> LedType;
-typedef AskSin<LedType, IrqInternalBatt, RadioType> Hal;
+typedef AskSin<LedType, BATTERY_MEASUREMENT, RadioType> Hal;
 Hal hal;
 
 DisplayType Display;
 
 #define DREG_DISPLAYMODE 0x03
-DEFREGISTER(Reg0, MASTERID_REGS, DREG_LOWBATLIMIT, DREG_LEDMODE, DREG_BACKONTIME, DREG_DISPLAYMODE)
+DEFREGISTER(Reg0, MASTERID_REGS, DREG_LOWBATLIMIT, DREG_LEDMODE, DREG_BACKONTIME, DREG_DISPLAYMODE, DREG_TRANSMITTRYMAX)
 class HBList0 : public RegList0<Reg0> {
   public:
     HBList0(uint16_t addr) : RegList0<Reg0>(addr) {}
@@ -71,11 +98,16 @@ class HBList0 : public RegList0<Reg0> {
 
     void defaults () {
       clear();
+#ifdef USE_LIPO
+      lowBatLimit(31);
+#else
       lowBatLimit(24);
+#endif
       backOnTime(10);
       defaultDisplayMode(0);
       displayHalfDegree(false);
       ledMode(1);
+      transmitDevTryMax(6);
     }
 };
 
@@ -132,6 +164,72 @@ class THList1 : public RegList1<THReg1> {
       sendIntervall(180);
     }
 };
+
+#ifdef USE_LIPO
+DEFREGISTER(Reg1, CREG_AES_ACTIVE, CREG_MSGFORPOS, CREG_EVENTDELAYTIME, CREG_LEDONTIME)
+class CRGSCList1 : public RegList1<Reg1> {
+  public:
+    CRGSCList1 (uint16_t addr) : RegList1<Reg1>(addr) {}
+    void defaults () {
+      clear();
+      msgForPosA(1);
+      msgForPosB(2);
+      aesActive(false);
+      eventDelaytime(0);
+      ledOntime(100);
+    }
+};
+
+class CRGPosition : public virtual Sensor {
+public:
+  enum State { NoPos=0, PosA, PosB, PosC };
+protected:
+  uint8_t  _position;
+public:
+  CRGPosition () : _position(NoPos) {}
+  uint8_t position () { return _position; }
+  uint8_t remap (uint8_t state) { return state; }
+  uint32_t interval () { return seconds2ticks(5); }
+};
+
+class MyOnePinPosition : public CRGPosition {
+  uint8_t sens;
+public:
+  MyOnePinPosition () : sens(0) { _present = true; }
+
+  void init (uint8_t pin) {
+    sens=pin;
+  }
+
+  void measure (__attribute__((unused)) bool async=false) {
+    bool isCharging = ( AskSinBase::readPin(sens) == 0);
+    static bool lastState=false;
+    _position = ( isCharging == true ) ? State::PosB : State::PosA;
+    if (isCharging != lastState) {
+      if (isCharging) {
+        Display.showBatterySymbol(DisplayType::BS_CHARGING);
+      } else {
+        Display.setNextScreen(SCREEN_TEMPERATURE, true);
+        hal.battery.init(0, sysclock);
+      }
+      lastState = isCharging;
+    }
+  }
+};
+
+class CRGSCChannel : public StateGenericChannel<MyOnePinPosition,Hal,HBList0,CRGSCList1,DefList4,PEERS_PER_CHANNEL> {
+public:
+  typedef StateGenericChannel<MyOnePinPosition,Hal,HBList0,CRGSCList1,DefList4,PEERS_PER_CHANNEL> BaseChannel;
+  CRGSCChannel () : BaseChannel() {};
+  ~CRGSCChannel () {}
+
+  void init (uint8_t pin) {
+    BaseChannel::init();
+    BaseChannel::possens.init(pin);
+  }
+};
+#endif
+
 
 class ConfigChannel : public RemoteChannel<Hal,PEERS_PER_CHANNEL,HBList0, RCEPList1>  {
 public:
@@ -218,6 +316,7 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
       tick = seconds2ticks(updCycle);
       clock.add(*this);
 
+      DPRINT("Battery ext voltage: "); DDECLN(device().battery().current());
       measure();
 
       //send message
@@ -248,14 +347,20 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
     }
 };
 
-class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVICE_CHANNEL_COUNT+1, HBList0> {
+class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVICE_CHANNEL_COUNT+ADDITIONAL_CHANNELS, HBList0> {
   public:
+#ifdef USE_LIPO
+      VirtChannel<Hal, CRGSCChannel, HBList0> crgscChannel;
+#endif
       VirtChannel<Hal, WeatherChannel, HBList0> weatherChannel;
       VirtChannel<Hal, ConfigChannel,  HBList0> remChannel[DEVICE_CHANNEL_COUNT];
   public:
-    typedef ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVICE_CHANNEL_COUNT+1, HBList0> DeviceType;
+    typedef ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVICE_CHANNEL_COUNT+ADDITIONAL_CHANNELS, HBList0> DeviceType;
     MixDevice (const DeviceInfo& info, uint16_t addr) : DeviceType(info, addr) {
       DeviceType::registerChannel(weatherChannel, 5);
+#ifdef USE_LIPO
+      DeviceType::registerChannel(crgscChannel, 6);
+#endif
       for (uint8_t i = 0; i < DEVICE_CHANNEL_COUNT; ++i) DeviceType::registerChannel(remChannel[i], i + 1);
     }
     virtual ~MixDevice () {}
@@ -263,6 +368,12 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
     ConfigChannel& btnChannel (uint8_t c) {
       return remChannel[c - 1];
     }
+
+#ifdef USE_LIPO
+    CRGSCChannel& crgChannel () {
+      return crgscChannel;
+    }
+#endif
 
     virtual void configChanged () {
       uint8_t disptimeout = getList0().backOnTime();
@@ -280,6 +391,7 @@ class MixDevice : public ChannelDevice<Hal, VirtBaseChannel<Hal, HBList0>, DEVIC
 
       Display.tempHalfDegree(getList0().displayHalfDegree());
       DPRINT(F("List0 SHOW TEMP HALFDEGREE : ")); DDECLN(getList0().displayHalfDegree());
+
 
       uint8_t lowbat = getList0().lowBatLimit();
       if( lowbat > 0 ) {
@@ -333,28 +445,36 @@ void setup() {
 
   sdev.init(hal);
 
-  hal.battery.init(seconds2ticks(60UL*60),sysclock);
+  hal.battery.init(seconds2ticks(1),sysclock);
   hal.battery.critical(BATTERY_CRITICAL);
 
   remoteChannelISR(sdev.btnChannel(1), BTN01_PIN);
   remoteChannelISR(sdev.btnChannel(2), BTN02_PIN);
   remoteChannelISR(sdev.btnChannel(3), BTN03_PIN);
   remoteChannelISR(sdev.btnChannel(4), BTN04_PIN);
+#ifdef USE_LIPO
+  sdev.crgChannel().init(B_CHARGING_PIN);
+  sdev.crgChannel().changed(true);
+#endif
 
   buttonISR(cfgBtn, CONFIG_BUTTON_PIN);
   while (hal.battery.current() == 0);
+  DPRINT("Battery voltage = ");DDECLN(hal.battery.current());
   sdev.initDone();
 }
-
 
 void loop() {
   bool worked = hal.runready();
   bool poll = sdev.pollRadio();
   if ( worked == false && poll == false ) {
     if (hal.battery.critical()) {
-      Display.showBatteryEmpty();
+      Display.showBatterySymbol(DisplayType::BS_EMPTY);
+#ifndef USE_LIPO
       hal.activity.sleepForever(hal);
+#endif
     }
     hal.activity.savePower<Sleep<>>(hal);
   }
 }
+
+
