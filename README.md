@@ -19,6 +19,9 @@ Als Beschriftung lassen sich
 
 hinterlegen
 
+![device](Images/IMG_1629.jpg)
+<br><br>
+
 ### Prototyp
 
 Nur Temperaturanzeige:<br>
@@ -36,7 +39,7 @@ Tasterbeschriftungen:<br>
 
 **erste Version von JLCPCB**
 
-<img src="Images/PCB1.jpg" width=300 /><img src="Images/PCB2.jpg" width=300 /><br/>
+<img src="PCB/Front.png" width=300 /><img src="PCB/Back.png" width=300 /><br/>
 <img src="Images/PCB3.jpg" width=300 /><img src="Images/PCB4.jpg" width=300 /><br/>
 
 ### CCU:
@@ -81,5 +84,3 @@ Tasterbeschriftungen:<br>
 |1	|0	| 600mAh LiPo	| 	| https://www.ebay.de/itm/LiPo-Lithium-Polymer-3-7V-Akku-mit-BMS-PCB-Batterie-Handy-MP3-Tablet-Navi-LiIon/372814314688?ssPageName=STRK%3AMEBIDX%3AIT&var=641708800610 
 |1	|0	| Induktionsladeempfänger	1x1,5cm | 	| https://de.aliexpress.com/item/4000086798457.html
 |1	|0	| Induktionsladegerät	| 	| https://de.aliexpress.com/item/4000969719130.html
-
-_Da es bei Reichelt keinen 0,47 Ohm Widerstand in 0805 gibt, verwende ich 2x 1,0 Ohm, die ich übereinander verlöte_
