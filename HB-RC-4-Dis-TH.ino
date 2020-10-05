@@ -210,7 +210,7 @@ public:
         Display.showBatterySymbol(DisplayType::BS_CHARGING);
       } else {
         Display.setNextScreen(SCREEN_TEMPERATURE, true);
-        hal.battery.init(0, sysclock);
+        hal.battery.resetCurrent();
       }
       lastState = isCharging;
     }
