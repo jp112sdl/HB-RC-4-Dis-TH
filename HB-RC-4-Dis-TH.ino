@@ -193,27 +193,33 @@ public:
 };
 
 class MyOnePinPosition : public CRGPosition {
+private:
   uint8_t sens;
+  bool _isCharging;
 public:
-  MyOnePinPosition () : sens(0) { _present = true; }
+  MyOnePinPosition () : sens(0), _isCharging(false) { _present = true; }
 
   void init (uint8_t pin) {
     sens=pin;
   }
 
   void measure (__attribute__((unused)) bool async=false) {
-    bool isCharging = ( AskSinBase::readPin(sens) == 0);
+    _isCharging = ( AskSinBase::readPin(sens) == 0);
     static bool lastState=false;
-    _position = ( isCharging == true ) ? State::PosB : State::PosA;
-    if (isCharging != lastState) {
-      if (isCharging) {
+    _position = ( _isCharging == true ) ? State::PosB : State::PosA;
+    if (_isCharging != lastState) {
+      if (_isCharging) {
         Display.showBatterySymbol(DisplayType::BS_CHARGING);
       } else {
         Display.setNextScreen(SCREEN_TEMPERATURE, true);
         hal.battery.resetCurrent();
       }
-      lastState = isCharging;
+      lastState = _isCharging;
     }
+  }
+
+  bool isCharging() {
+    return _isCharging;
   }
 };
 
@@ -226,6 +232,10 @@ public:
   void init (uint8_t pin) {
     BaseChannel::init();
     BaseChannel::possens.init(pin);
+  }
+
+  bool isCharging() {
+    return possens.isCharging();
   }
 };
 #endif
@@ -316,7 +326,7 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
       tick = seconds2ticks(updCycle);
       clock.add(*this);
 
-      DPRINT("Battery ext voltage: "); DDECLN(device().battery().current());
+      DPRINT("Battery ext voltage: "); DDECLN(device().battery().voltageHighRes());
       measure();
 
       //send message
@@ -414,6 +424,9 @@ public:
     uint8_t old = ButtonType::state();
     ButtonType::state(s);
     if( s == ButtonType::released ) {
+#ifdef USE_LIPO
+      if (sdev.crgChannel().isCharging() == false)
+#endif
       if (Display.currentScreen() != SCREEN_KEYLABELS)
         Display.setNextScreen(Screen::SCREEN_KEYLABELS);
     }
@@ -422,9 +435,7 @@ public:
     }
     else if( s == ButtonType::longpressed ) {
       if( old == ButtonType::longpressed ) {
-        if( sdev.getList0().localResetDisable() == false ) {
-          sdev.reset(); // long pressed again - reset
-        }
+        sdev.reset(); // long pressed again - reset
       }
       else {
         sdev.led().set(LedStates::key_long);
@@ -459,7 +470,7 @@ void setup() {
 
   buttonISR(cfgBtn, CONFIG_BUTTON_PIN);
   while (hal.battery.current() == 0);
-  DPRINT("Battery voltage = ");DDECLN(hal.battery.current());
+  DPRINT("Battery voltage = ");DDECLN(hal.battery.voltageHighRes());
   sdev.initDone();
 }
 
