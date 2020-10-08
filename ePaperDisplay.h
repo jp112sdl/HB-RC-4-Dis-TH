@@ -149,7 +149,7 @@ public:
       uint8_t diff = battery_low > battery_current ? 0 : battery_current - battery_low;
       uint8_t battpct = (100 * diff) / range;
 
-      bool update = false;
+      uint8_t updateMode = 0;  // 0 = no update, 1 = full update, 2 = partial update
 
       //draw main frame on first call
       if (current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
@@ -166,7 +166,7 @@ public:
         //battery icon
         display.drawRect(display.width()/2-20, display.height()-20, 32, 18, BLACK);
         display.fillRect(display.width()/2-20+32, display.height()-16, 6, 10, BLACK);
-        update = true;
+        updateMode = 1;
       }
 
       if (this->temperature != last_temperature || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
@@ -212,7 +212,7 @@ public:
           u8g2Fonts.print(t_dec);
         }
 
-        update = true;
+        if (updateMode == 0) updateMode = 2;
       }
 
       if (defaultdisplaymode == DDM_TH && (humidity != last_humidity || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true)) {
@@ -232,7 +232,7 @@ public:
         u8g2Fonts.setFont(FONT_HUMIDITY_UNIT);
         u8g2Fonts.print(h_unit);
 
-        update = true;
+        if (updateMode == 0) updateMode = 2;
       }
 
       if (battpct != last_battpct || current_screen != Screen::SCREEN_TEMPERATURE || displayModeHasChanged() == true) {
@@ -240,13 +240,21 @@ public:
         display.fillRect(display.width()/2-20 + 3 + 8 + 1 , display.height()-18, 8, 14, battpct > 40 ? BLACK : WHITE);
         display.fillRect(display.width()/2-20 + 3 + 8 + 1 + 8 + 1 , display.height()-18, 8, 14, battpct > 60 ? BLACK : WHITE);
 
-        update = true;
+        if (updateMode == 0) updateMode = 2;
       }
 
-      if (update == true) {
-        display.display();
+
+      if (updateMode > 0) {
 #ifndef USE_LIPO
+        display.display();
         display.hibernate();
+#else
+        if (updateMode == 1)
+          display.display();
+        if (updateMode == 2)
+          display.displayWindow(0, 0, 200, 200);
+
+        display.powerOff();
 #endif
       }
 
@@ -287,7 +295,7 @@ public:
           u8g2Fonts.setCursor(centerPosition((display.width() / 2) - 2, ht),display.height()-7);
         }
         if (i == 3) {
-          display.drawRoundRect(display.width() / 2 + 2, display.height() - (display.height() / 10) - 4, display.width() / 2-2, headerBoxHeight, 2, BLACK);
+          display.drawRoundRect(display.width() / 2 + 2, display.height() - (display.height() / 10) - 4, display.width() / 2 - 3, headerBoxHeight, 2, BLACK);
           u8g2Fonts.setCursor((display.width() / 2) + centerPosition((display.width() / 2) + 1, ht),display.height()-7);
         }
 
@@ -379,7 +387,7 @@ public:
     set(seconds2ticks(1), sysclock);
   }
 
-  enum {BS_EMPTY, BS_FULL, BS_CHARGING};
+  enum {BS_EMPTY, BS_CHARGING};
 
   void showBatterySymbol(uint8_t symbol) {
     current_screen = Screen::SCREEN_EMPTYBATTERY;
@@ -390,9 +398,6 @@ public:
       switch (symbol) {
         case BS_EMPTY:
           display.drawBitmap(10, 10, emptyBattery,180, 180,BLACK);
-          break;
-        case BS_FULL:
-          display.drawBitmap(10, 10, fullBattery,180, 180,BLACK);
           break;
         case BS_CHARGING:
           DPRINTLN("show BS_CHARGING icon");
