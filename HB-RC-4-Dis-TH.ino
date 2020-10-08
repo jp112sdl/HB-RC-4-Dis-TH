@@ -246,6 +246,13 @@ public:
   ConfigChannel () : RemoteChannel()  {}
     virtual ~ConfigChannel () {}
 
+    virtual void state(uint8_t s) {
+      if (Display.currentScreen() == SCREEN_KEYLABELS) {
+        Display.setNextScreen(SCREEN_KEYLABELS, false);
+      }
+      RemoteChannel::state(s);
+    }
+
     void configChanged() {
       RemoteChannel::configChanged();
 
@@ -427,7 +434,7 @@ public:
 #ifdef USE_LIPO
       if (sdev.crgChannel().isCharging() == false)
 #endif
-      if (Display.currentScreen() != SCREEN_KEYLABELS)
+      if (Display.currentScreen() != Screen::SCREEN_KEYLABELS)
         Display.setNextScreen(Screen::SCREEN_KEYLABELS);
     }
     else if( s == ButtonType::longreleased ) {

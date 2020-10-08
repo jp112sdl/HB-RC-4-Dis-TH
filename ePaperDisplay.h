@@ -23,7 +23,7 @@
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
 GxEPD2_BW<GxEPD2_154_M09, MAX_HEIGHT(GxEPD2_154_M09)> display(GxEPD2_154_M09(/*CS=10*/ GxCS_PIN, /*DC=*/ GxDC_PIN, /*RST=*/ GxRST_PIN, /*BUSY=*/ GxBUSY_PIN)); // GDEW0154M09 200x200
 U8G2_FONTS_GFX u8g2Fonts(display);
-typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE, SCREEN_EMPTYBATTERY } Screen;
+typedef enum screens { SCREEN_KEYLABELS, SCREEN_TEMPERATURE, SCREEN_EMPTYBATTERY, SCREEN_INIT } Screen;
 
 #define BLACK       GxEPD_BLACK
 #define WHITE       GxEPD_WHITE
@@ -68,7 +68,7 @@ private:
   uint16_t centerPosition(const char * text) { return centerPosition(display.width(), text); }
   uint16_t centerPosition(uint8_t width, const char * text) { return (width / 2) - (u8g2Fonts.getUTF8Width(text) / 2); }
 public:
-  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_KEYLABELS), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery_current(0), battery_low(0), temphalfdegree(false) {}
+  DisplayType () :  Alarm(seconds2ticks(1)), screen(SCREEN_KEYLABELS), current_screen(SCREEN_INIT), timeout(10), temperature(0), humidity(0), defaultdisplaymode(DDM_TH), displaymodehaschanged(false), battery_current(0), battery_low(0), temphalfdegree(false) {}
   virtual ~DisplayType () {}
 
   void set (uint32_t t,AlarmClock& clock) {
@@ -266,6 +266,7 @@ public:
   }
 
   void showKeyLabels() {
+    if (current_screen != Screen::SCREEN_KEYLABELS) {
     current_screen = Screen::SCREEN_KEYLABELS;
 
     display.fillScreen(GxEPD_WHITE);
@@ -344,6 +345,7 @@ public:
       }
     }
     display.display();
+    }
 
     screen = Screen::SCREEN_TEMPERATURE;
   }
