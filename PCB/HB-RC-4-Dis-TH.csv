@@ -43,7 +43,7 @@ Reference, Value, Footprint, Datasheet
 "C16","100n","Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder","~"
 "C17","100n","Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder","~"
 "U4","MCP73831T-2ACI/OT","Package_TO_SOT_SMD:SOT-23-5","http://ww1.microchip.com/downloads/en/DeviceDoc/20001984g.pdf"
-"U3","MCP1703T-3302E/CB","Package_TO_SOT_SMD:SOT-23","http://ww1.microchip.com/downloads/en/DeviceDoc/20005122B.pdf"
+"U3","MCP1700T-3002E/CB","Package_TO_SOT_SMD:SOT-23",""
 "J6","Batt","Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical","~"
 "C19","10/10","Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder","~"
 "C20","10/10","Capacitor_SMD:C_0805_2012Metric_Pad1.15x1.40mm_HandSolder","~"
