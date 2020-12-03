@@ -151,16 +151,16 @@ class THList1 : public RegList1<THReg1> {
     bool sendIntervall (uint16_t value) const { return this->writeRegister(0x20, (value >> 8) & 0xff) && this->writeRegister(0x21, value & 0xff); }
     uint16_t sendIntervall () const { return (this->readRegister(0x20, 0) << 8) + this->readRegister(0x21, 0); }
 
-    bool TemperatureOffset (int8_t value) const { return this->writeRegister(0x01, (value) & 0xff); }
-    int8_t TemperatureOffset () const { return (int8_t)(this->readRegister(0x01, 0)); }
+    bool TemperatureOffsetIndex (uint8_t value) const { return this->writeRegister(0x01, (value) & 0xff); }
+    uint8_t TemperatureOffsetIndex () const { return (int8_t)(this->readRegister(0x01, 0)); }
 
-    bool HumidityOffset (int8_t value) const { return this->writeRegister(0x02, (value) & 0xff); }
-    int8_t HumidityOffset () const { return (int8_t)(this->readRegister(0x02, 0)); }
+    bool HumidityOffsetIndex (uint8_t value) const { return this->writeRegister(0x02, (value) & 0xff); }
+    uint8_t HumidityOffsetIndex () const { return (uint8_t)(this->readRegister(0x02, 0)); }
 
     void defaults () {
       clear();
-      TemperatureOffset(0);
-      HumidityOffset(0);
+      TemperatureOffsetIndex(7);
+      HumidityOffsetIndex(5);
       sendIntervall(180);
     }
 };
@@ -323,6 +323,9 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
       temp = sensor.temperature();
       humidity = sensor.humidity();
 
+      temp += -35+5*this->getList1().TemperatureOffsetIndex();
+      humidity += -5 + this->getList1().HumidityOffsetIndex();
+
       DPRINT(F("T/H = "));DDEC(temp);DPRINT(F("/"));DDECLN(humidity);
     }
 
@@ -358,9 +361,9 @@ class WeatherChannel : public Channel<Hal, THList1, EmptyList, List4, PEERS_PER_
     uint8_t flags () const { return 0; }
 
     virtual void configChanged () {
-      //DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") TEMP OFFSET : "));DDECLN(this->getList1().TemperatureOffset());
-      //DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") HUMI OFFSET : "));DDECLN(this->getList1().HumidityOffset());
-      DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") SEND INTERV : "));DDECLN(this->getList1().sendIntervall());
+      DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") TEMP OFFSET IDX : "));DDECLN(this->getList1().TemperatureOffsetIndex());
+      DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") HUMI OFFSET IDX : "));DDECLN(this->getList1().HumidityOffsetIndex());
+      DPRINT(F("WC (#"));DDEC(number());DPRINT(F(") SEND INTERV     : "));DDECLN(this->getList1().sendIntervall());
     }
 };
 
