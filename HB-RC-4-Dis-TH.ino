@@ -52,6 +52,11 @@
 #include <ContactState.h>
 #include <sensors/Sht31.h>
 
+// make compatible with v5.0.0
+#ifndef ASKSIN_PLUS_PLUS_VERSION_STR
+  #define ASKSIN_PLUS_PLUS_VERSION_STR ASKSIN_PLUS_PLUS_VERSION
+#endif
+
 #define CC1101_CS_PIN       10 // PB4
 #define CC1101_GDO0_PIN      2 // PD2
 #define BTN01_PIN           26 // PC4

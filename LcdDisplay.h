@@ -334,7 +334,7 @@ public:
     screen = SCREEN_KEYLABELS;
 
     const char * asksinpp     PROGMEM = "AskSin++";
-    const char * version      PROGMEM = "V " ASKSIN_PLUS_PLUS_VERSION;
+    const char * version      PROGMEM = "V " ASKSIN_PLUS_PLUS_VERSION_STR;
     const char * compiledDate PROGMEM = __DATE__ ;
     const char * compiledTime PROGMEM = __TIME__;
     const char * ser                  = (char*)serial;
