@@ -80,9 +80,9 @@ public:
       break;
     }
   }
-  void setNextScreen(Screen scr) {
+  void setNextScreen(Screen scr, bool immediate=false) {
     screen = scr;
-    set(millis2ticks(timeout),sysclock);
+    set(millis2ticks(immediate? 5 : timeout),sysclock);
   }
 
   void setScreenKeysTimeout(uint8_t t) {
